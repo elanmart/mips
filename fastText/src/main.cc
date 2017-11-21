@@ -88,6 +88,27 @@ void printPrintNgramsUsage() {
     << std::endl;
 }
 
+void printTrainIndexUsage() {
+  std::cerr
+    << "usage: fasttext train-index <model> [args]\n\n"
+    << "  <model>                       model filename\n\n"
+    << "  Supported args are:\n\n"
+    << "    index-size           [4096] index size passed to faiss\n"
+    << "    index-quantizer      [Flat] index quantizer passed to faiss\n"
+    << std::endl;
+}
+
+void printApproxPredictUsage() {
+  std::cerr
+    << "usage: fasttext approx-test <model> <test-data> [k] [nprobe]\n\n"
+    << "  <model>                      model filename\n"
+    << "  <test-data>                  test data filename\n"
+    << "  <k>                  [5]     same as in fasttext.predict: we will output top k labels\n"
+    << "  <nprobe>             [256]  `nprobe` search parameter passed to faiss\n"
+    << std::endl;
+}
+
+
 void quantize(const std::vector<std::string>& args) {
   std::shared_ptr<Args> a = std::make_shared<Args>();
   if (args.size() < 3) {
@@ -176,6 +197,66 @@ void predict(const std::vector<std::string>& args) {
   }
 
   exit(0);
+}
+
+void trainIndex(const std::vector<std::string>& args) {
+  auto fail = [](){ 
+    printTrainIndexUsage() ; exit(EXIT_FAILURE); 
+  };
+
+  if ((args.size() < 3) || (args.size() > 5)) 
+    fail();
+
+  FastText fasttext;
+  fasttext.loadModel(std::string(args[2]));
+
+  if (fasttext.hasIndex()) {
+    std::cerr << "Model is already trained. Exiting.\n\n";
+    exit(EXIT_SUCCESS);
+  }
+
+  std::string index_size(args[3]);
+  std::string index_quant(args[4]);
+
+  fasttext.trainIndex(index_size, index_quant);
+}
+
+void approxPredict(const std::vector<std::string>& args) {
+
+  auto fail = [](){ 
+    printFvecsUsage() ; exit(EXIT_FAILURE); 
+  };
+
+  auto get_arg = [&args](int32_t idx, int32_t default_) {
+    int32_t ret = default_;
+
+    if (args.size() >= idx+1)
+      ret = stoi(args[idx]);
+    
+    return ret;
+  };
+
+  if ((args.size() < 4) || (args.size() > 6))
+    fail();
+
+  FastText fasttext;
+  fasttext.loadModel(std::string(args[2]));
+
+  std::string fname(args[3]);
+  std::ifstream ifs(fname);
+  
+  auto k      = get_arg(4, 1);
+  auto nprobe = get_arg(5, 256);
+
+  if (not ifs.is_open())
+    fail();
+
+  if (not fasttext.hasIndex())
+    fail();
+
+  fasttext.approxPredict(ifs, k, nprobe);
+
+  exit(EXIT_SUCCESS); 
 }
 
 void toFvecs(const std::vector<std::string>& args) {

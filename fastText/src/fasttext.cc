@@ -430,6 +430,68 @@ void FastText::predict(std::istream& in, int32_t k, bool print_prob) {
   }
 }
 
+void FastText::trainIndex(std::string index_size, std::string index_quant) {
+  auto index_str = index_size + ',' + index_quant;
+  
+  index_.reset(
+    faiss::index_factory(output_->n_, index_str.c_str(), faiss::METRIC_INNER_PRODUCT)
+  );
+    
+  index_->train(
+    output_->m_, 
+    output_->data_
+  );
+
+  index_->add(
+    output_->m_, 
+    output_->data_
+  );
+}
+
+void FastText::approxPredict(std::istream& ifs, int32_t k, int32_t nprobe) {
+
+  faiss::ParameterSpace params;
+  std::string nprobe_arg_str = "nprobe=" + std::to_string(nprobe);
+  params.set_index_parameters(index_.get(), nprobe_arg_str.c_str());
+
+  std::vector<real> hidden_states;  // TODO: this sucks
+
+  while (ifs.peek() != EOF) {
+    std::vector<int32_t> words, labels;
+    Vector hidden(args_->dim);
+
+    dict_->getLine(ifs, words, labels, model_->rng);
+    if (words.empty())
+      continue;
+
+    model_->computeHidden(words, hidden);
+    
+    for (int32_t i=0; i<hidden.m_; i++) {
+      hidden_states.push_back(hidden.data_[i]); 
+    }
+  }
+  
+  uint64_t nq = hidden_states.size() / args_->dim;
+  
+  faiss::Index::idx_t *I = new faiss::Index::idx_t[nq * k];
+  float *D               = new float[nq * k];
+
+  index_->search(nq, hidden_states.data(), k, D, I);
+
+  for (uint64_t i=0; i<nq; i++) {
+    for (uint32_t j=0; j<k; j++) {
+      if (j > 0) {
+        std::cout << " ";
+      }
+      std::cout << I[i*k + j];
+    }
+    std::cout << std::endl;
+  }
+
+  delete[] D;
+  delete[] I;
+}
+
 void FastText::toFvecs(std::istream& ifs, std::ofstream& ofs_h, std::ofstream& ofs_w, std::ofstream& ofs_l) {
   output_->toFvecs(ofs_w);
 
@@ -725,6 +787,10 @@ int FastText::getDimension() const {
 
 bool FastText::isQuant() const {
   return quant_;
+}
+
+bool FastText::hasIndex() const {
+ return bool(index_);
 }
 
 }

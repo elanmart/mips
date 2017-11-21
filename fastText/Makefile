@@ -7,8 +7,12 @@
 # of patent rights can be found in the PATENTS file in the same directory.
 #
 
+LD_FLAGS=-L../faiss -lfaiss -lopenblas
 CXX = c++
-CXXFLAGS = -pthread -std=c++0x
+
+CXXFLAGS = -pthread
+CXXFLAGS+= -std=c++11 -fopenmp
+
 OBJS = args.o dictionary.o productquantizer.o matrix.o qmatrix.o vector.o model.o utils.o fasttext.o
 INCLUDES = -I.
 
@@ -46,7 +50,7 @@ fasttext.o: src/fasttext.cc src/*.h
 	$(CXX) $(CXXFLAGS) -c src/fasttext.cc
 
 fasttext: $(OBJS) src/fasttext.cc src/main.cc
-	$(CXX) $(CXXFLAGS) $(OBJS) src/main.cc -o fasttext
+	$(CXX) $(CXXFLAGS) $(OBJS) src/main.cc -o fasttext $(LD_FLAGS)
 
 clean:
 	rm -rf *.o fasttext
