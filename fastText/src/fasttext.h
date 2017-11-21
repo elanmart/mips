@@ -29,6 +29,7 @@
 #include "vector.h"
 
 #include "../../faiss/AutoTune.h"
+#include "../../faiss/index_io.h"
 
 #pragma message("getVector is being deprecated and replaced by getWordVector.")
 
@@ -48,7 +49,7 @@ class FastText {
   std::shared_ptr<Model> model_;
 
   std::shared_ptr<faiss::Index> index_;
-    
+
   std::atomic<int64_t> tokenCount;
   clock_t start;
   void signModel(std::ostream&);
@@ -98,7 +99,7 @@ class FastText {
   void test(std::istream&, int32_t);
   void predict(std::istream&, int32_t, bool);
   void predict(std::istream&, int32_t, std::vector<std::pair<real, std::string>>&) const;
-  void trainIndex(std::string, std::string);  
+  void trainIndex(std::string, std::string);
   void approxPredict(std::istream&, int32_t, int32_t);
   void toFvecs(std::istream&, std::ofstream&, std::ofstream&, std::ofstream&);
   void ngramVectors(std::string);

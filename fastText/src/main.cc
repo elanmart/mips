@@ -23,6 +23,8 @@ void printUsage() {
     << "  test                    evaluate a supervised classifier\n"
     << "  predict                 predict most likely labels\n"
     << "  predict-prob            predict most likely labels with probabilities\n"
+    << "  train-index             train faiss index to allow for approx-predict\n"
+    << "  approx-predict          use faiss to predict most likely labels\n"
     << "  to-fvecs                store hidden representations and output matrix for Fvecs benchmarking\n"
     << "  skipgram                train a skipgram model\n"
     << "  cbow                    train a cbow model\n"
@@ -200,31 +202,39 @@ void predict(const std::vector<std::string>& args) {
 }
 
 void trainIndex(const std::vector<std::string>& args) {
-  auto fail = [](){ 
-    printTrainIndexUsage() ; exit(EXIT_FAILURE); 
+  auto fail = [](){
+    printTrainIndexUsage() ; exit(EXIT_FAILURE);
   };
 
-  if ((args.size() < 3) || (args.size() > 5)) 
+  if ((args.size() < 3) || (args.size() > 5))
     fail();
 
+  auto model_path = std::string(args[2]);
   FastText fasttext;
-  fasttext.loadModel(std::string(args[2]));
+  fasttext.loadModel(model_path);
 
   if (fasttext.hasIndex()) {
     std::cerr << "Model is already trained. Exiting.\n\n";
     exit(EXIT_SUCCESS);
   }
 
-  std::string index_size(args[3]);
-  std::string index_quant(args[4]);
+  std::string index_size("4096");
+  std::string index_quant("Flat");
+
+  if (args.size() > 3)
+    index_size = args[3];
+
+  if (args.size() > 4)
+    index_quant = args[4];
 
   fasttext.trainIndex(index_size, index_quant);
+  fasttext.saveModel(model_path);
 }
 
 void approxPredict(const std::vector<std::string>& args) {
 
-  auto fail = [](){ 
-    printFvecsUsage() ; exit(EXIT_FAILURE); 
+  auto fail = [](){
+    printFvecsUsage() ; exit(EXIT_FAILURE);
   };
 
   auto get_arg = [&args](int32_t idx, int32_t default_) {
@@ -232,7 +242,7 @@ void approxPredict(const std::vector<std::string>& args) {
 
     if (args.size() >= idx+1)
       ret = stoi(args[idx]);
-    
+
     return ret;
   };
 
@@ -244,7 +254,7 @@ void approxPredict(const std::vector<std::string>& args) {
 
   std::string fname(args[3]);
   std::ifstream ifs(fname);
-  
+
   auto k      = get_arg(4, 1);
   auto nprobe = get_arg(5, 256);
 
@@ -256,7 +266,7 @@ void approxPredict(const std::vector<std::string>& args) {
 
   fasttext.approxPredict(ifs, k, nprobe);
 
-  exit(EXIT_SUCCESS); 
+  exit(EXIT_SUCCESS);
 }
 
 void toFvecs(const std::vector<std::string>& args) {
@@ -399,6 +409,10 @@ int main(int argc, char** argv) {
     analogies(args);
   } else if (command == "predict" || command == "predict-prob" ) {
     predict(args);
+  } else if (command == "train-index") {
+    trainIndex(args);
+  } else if (command == "approx-predict") {
+    approxPredict(args);
   } else if (command == "to-fvecs") {
     toFvecs(args);
   } else {

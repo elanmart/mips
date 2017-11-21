@@ -145,6 +145,7 @@ void FastText::signModel(std::ostream& out) {
 
 void FastText::saveModel() {
   std::string fn(args_->output);
+
   if (quant_) {
     fn += ".ftz";
   } else {
@@ -154,6 +155,7 @@ void FastText::saveModel() {
 }
 
 void FastText::saveModel(const std::string path) {
+
   std::ofstream ofs(path, std::ofstream::binary);
   if (!ofs.is_open()) {
     throw std::invalid_argument(path + " cannot be opened for saving!");
@@ -176,28 +178,32 @@ void FastText::saveModel(const std::string path) {
     output_->save(ofs);
   }
 
-  ofs.close();
+  bool has_index = hasIndex();
+  ofs.write((char*)&has_index, sizeof(bool));
+
+  if (has_index) {
+    std::string index_path = (path + ".index");
+    faiss::write_index(index_.get(), index_path.c_str());
+  }
 }
 
 void FastText::loadModel(const std::string& filename) {
-  std::ifstream ifs(filename, std::ifstream::binary);
-  if (!ifs.is_open()) {
+  std::ifstream in(filename, std::ifstream::binary);
+
+  if (!in.is_open()) {
     throw std::invalid_argument(filename + " cannot be opened for loading!");
   }
-  if (!checkModel(ifs)) {
+  if (!checkModel(in)) {
     throw std::invalid_argument(filename + " has wrong file format!");
   }
-  loadModel(ifs);
-  ifs.close();
-}
 
-void FastText::loadModel(std::istream& in) {
   args_ = std::make_shared<Args>();
   dict_ = std::make_shared<Dictionary>(args_);
   input_ = std::make_shared<Matrix>();
   output_ = std::make_shared<Matrix>();
   qinput_ = std::make_shared<QMatrix>();
   qoutput_ = std::make_shared<QMatrix>();
+
   args_->load(in);
   if (version == 11 && args_->model == model_name::sup) {
     // backward compatibility: old supervised models do not use char ngrams.
@@ -237,6 +243,20 @@ void FastText::loadModel(std::istream& in) {
   } else {
     model_->setTargetCounts(dict_->getCounts(entry_type::word));
   }
+
+  bool has_index;
+  in.read((char*)&has_index, sizeof(bool));
+
+  if (has_index){
+    std::string index_path(filename + ".index");
+    index_.reset(faiss::read_index(index_path.c_str()));
+  }
+
+  in.close();
+}
+
+void FastText::loadModel(std::istream& in) {
+  //
 }
 
 void FastText::printInfo(real progress, real loss) {
@@ -431,19 +451,19 @@ void FastText::predict(std::istream& in, int32_t k, bool print_prob) {
 }
 
 void FastText::trainIndex(std::string index_size, std::string index_quant) {
-  auto index_str = index_size + ',' + index_quant;
-  
+  auto index_str = "IVF" + index_size + "," + index_quant;
+
   index_.reset(
     faiss::index_factory(output_->n_, index_str.c_str(), faiss::METRIC_INNER_PRODUCT)
   );
-    
+
   index_->train(
-    output_->m_, 
+    output_->m_,
     output_->data_
   );
 
   index_->add(
-    output_->m_, 
+    output_->m_,
     output_->data_
   );
 }
@@ -465,14 +485,14 @@ void FastText::approxPredict(std::istream& ifs, int32_t k, int32_t nprobe) {
       continue;
 
     model_->computeHidden(words, hidden);
-    
+
     for (int32_t i=0; i<hidden.m_; i++) {
-      hidden_states.push_back(hidden.data_[i]); 
+      hidden_states.push_back(hidden.data_[i]);
     }
   }
-  
+
   uint64_t nq = hidden_states.size() / args_->dim;
-  
+
   faiss::Index::idx_t *I = new faiss::Index::idx_t[nq * k];
   float *D               = new float[nq * k];
 
