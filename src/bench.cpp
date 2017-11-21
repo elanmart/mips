@@ -2,6 +2,7 @@
 
 #include <cstdio>
 #include <cassert>
+#include <set>
 
 #include <sys/time.h>
 
@@ -131,9 +132,16 @@ void bench_query(faiss::Index* index) {
         // evaluate result by hand.
         int n_1 = 0, n_10 = 0, n_100 = 0;
         for(size_t i = 0; i < nq; i++) {
-            int gt_nn = gt.at(i, 0);
+            // construct a set with nearsets neighbours of queries
+            std::set<int> nn_set;
+            for (size_t j = 0; j < k; j++) {
+                if (gt.at(i, j) != -1)
+                    nn_set.insert(gt.at(i, j));
+            }
+
             for(size_t j = 0; j < k; j++) {
-                if (I[i * k + j] == gt_nn) {
+                // check if result is in the set of nn
+                if (nn_set.find(I[i * k + j]) != nn_set.end()) {
                     if(j < 1) n_1++;
                     if(j < 10) n_10++;
                     if(j < 100) n_100++;
