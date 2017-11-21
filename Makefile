@@ -1,6 +1,6 @@
 LD_FLAGS=-Lfaiss -lfaiss -lopenblas
 
-CPP_FLAGS= -O2 -I. -g -fPIC
+CPP_FLAGS= -O3 -I. -g -fPIC
 CPP_FLAGS+= -Wall -Wextra -Wno-unused-result
 CPP_FLAGS+= -std=c++11 -fopenmp
 
