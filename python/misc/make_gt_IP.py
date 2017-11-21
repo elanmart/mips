@@ -59,6 +59,8 @@ def generate_gtIP(data, path, skip_tests=False):
     indexIP.add(xb)
 
     _, I = indexIP.search(xq, k)
+    # ignore all but the best vector
+    I[:, 1:] = -1
     save_sift(I, os.path.join(path, GT_IP_FNAME), dtype=np.int32)
 
     # sanity-check

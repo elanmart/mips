@@ -82,7 +82,7 @@ export PATH=/usr/local/cuda-8.0/bin${PATH:+:${PATH}}
 
 Reboot the system.
 
-8. Confirm successful installation by running `deviceQuery`.
+8. Confirm successful installation by running `deviceQuery`. If you're using NVIDIA PRIME to switch GPUs, switching to NVIDIA GPU can be helpful.
 
 ```bash
 mkdir ~/cuda_samples
@@ -93,9 +93,22 @@ make -j10
 bin/x86_64/linux/release/deviceQuery
 ```
 
+## Running GPU examples from faiss
 9. Compile GPU support in faiss.
-Go to `mips` directory.
+Go to `mips/faiss` directory. Restore original `PYTHONCFLAGS` i.e. for Python 2.7.
 ```bash
-cd faiss/gpu
+apt install swig
+make py
+export PYTHONPATH=.
+cd gpu
 make
+```
+
+10. Now you should be able to run faiss examples on GPU.
+```bash
+python -c "import faiss"
+python benchs/bench_gpu_sift1M.py
+sudo apt install python-matplotlib
+python python/demo_auto_tune.py
+tests/demo_ivfpq_indexing
 ```
