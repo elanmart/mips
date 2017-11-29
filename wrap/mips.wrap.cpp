@@ -1,61 +1,83 @@
+#include "../src/common.h"
 #include "../src/quantization.h"
 #include "../src/kmeans.h"
+#include "../src/alsh.h"
 #include "util.wrap.h"
 
 namespace py = pybind11;
 
-using layer_t = IndexHierarchicKmeans::layer_t;
-
-PYBIND11_MAKE_OPAQUE(std::vector<size_t>);
-PYBIND11_MAKE_OPAQUE(std::vector<std::vector<size_t>>);
-PYBIND11_MAKE_OPAQUE(std::vector<layer_t>);
 
 PYBIND11_MODULE(mips, m) {
     m.doc() = "MIPS library";
 
-    // FLOAT MATRIX ----------------------------------------------------------------------------------------------------
-    py::class_<FloatMatrix> fm(m, "FloatMatrix", py::buffer_protocol());
-    fm.def_buffer([](FloatMatrix &m) -> py::buffer_info {
-        return py::buffer_info(
-            m.data.data(),
-            sizeof(float),
-            py::format_descriptor<float>::format(),
-            2,
-            { m.vector_count(), m.vector_length },
-            { sizeof(float) * m.vector_count(), sizeof(float) }
-        );
-    });
 
-    // K-MEANS RESULT---------------------------------------------------------------------------------------------------
-    py::class_<kmeans_result>(m, "kmeans_result")
-        .def_readonly("centroids", &kmeans_result::centroids)
-        .def_property_readonly("assignments",
-                               [](kmeans_result& self) {
-                                   return STLVectorWrapper<size_t>(self.assignments).as_array();},
-                               py::keep_alive<0, 1>());
-
-    // LAYER_T ---------------------------------------------------------------------------------------------------------
-    py::class_<layer_t>(m, "layer_t")
-        .def_readonly("kr", &layer_t::kr)
-        .def_readonly("centroid_children", &layer_t::centroid_children)
-        .def_readonly("cluster_num", &layer_t::cluster_num);
-
-    // K-MEANS ---------------------------------------------------------------------------------------------------------
-    py::class_<IndexHierarchicKmeans> hkm(m, "IndexHKM");
-    hkm.def(
-        py::init<size_t, size_t, size_t, size_t>(),
-        "no docstring",
-        py::arg("dim"), py::arg("m"), py::arg("layers_count"), py::arg("opened_trees")
+    // MipsAugmentationShrivastava
+    py::class_<MipsAugmentationShrivastava> msrvaug(m, "MipsAugmentationShrivastava");
+    msrvaug.def(
+        py::init<size_t, size_t, float>(),
+        "MIPS Augmentation scheme",
+        py::arg("dim"), py::arg("m"), py::arg("U")
     );
-    hkm.def_readonly("layers_count", &IndexHierarchicKmeans::layers_count);
-    hkm.def_readonly("m",            &IndexHierarchicKmeans::m);
-    hkm.def_readonly("opened_trees", &IndexHierarchicKmeans::opened_trees);
-    hkm.def_readonly("vectors",      &IndexHierarchicKmeans::vectors, py::return_value_policy::reference);
-    hkm.def_readonly("layers" ,      &IndexHierarchicKmeans::layers,  py::return_value_policy::reference);
+
+
+    // IndexHierarchicKmeans
+    py::class_<IndexHierarchicKmeans> kmns(m, "IndexHierarchicKmeans");
+    kmns.def(
+        py::init([](size_t dim, size_t layers_count, size_t opened_trees, 
+                    MipsAugmentationShrivastava& augmentation) {
+                        return std::unique_ptr<IndexHierarchicKmeans>(
+                            new IndexHierarchicKmeans(dim,
+                                                      layers_count,
+                                                      opened_trees,
+                                                      &augmentation));
+                    }),
+        "IndexHierarchicKmeans",
+        py::arg("dim"), py::arg("layers_count"), py::arg("opened_trees"), py::arg("augmentation")
+    );
+    WRAP_INDEX_HELPER(IndexHierarchicKmeans, kmns);
+
+
+    // IndexALSH
+    py::class_<IndexALSH> alsh(m, "IndexALSH");
+    alsh.def(
+        py::init([](size_t dim, size_t L, 
+                    size_t K, size_t r, 
+                    MipsAugmentationShrivastava& augmentation) {
+                        return std::unique_ptr<IndexALSH>(
+                            new IndexALSH(dim,
+                                          L,
+                                          K,
+                                          r,
+                                          &augmentation));
+                    }),
+        "Asymmetric LSH",
+        py::arg("dim"), py::arg("L"), py::arg("K"), py::arg("r"), py::arg("augmentation")
+    );
+    WRAP_INDEX_HELPER(IndexALSH, alsh);
+
+
+    // IndexSubspaceQuantization(size_t dim, size_t subspace_count, size_t centroid_count);
+    py::class_<IndexSubspaceQuantization> qnt(m, "IndexSubspaceQuantization");
+    qnt.def(
+        py::init<size_t, size_t, size_t>(),
+        "IndexSubspaceQuantization",
+        py::arg("dim"), py::arg("subspace_count"), py::arg("centroid_count")
+    );
+    WRAP_INDEX_HELPER(IndexSubspaceQuantization, qnt);
+    
+}
+
+/*
+    // IndexHierarchicKmeans
+    py::class_<IndexHierarchicKmeans> hkm(m, "IndexHierarchicKmeans");
+    hkm.def(
+        py::init<size_t, size_t, size_t, size_t, MipsAugmentation>(),
+        "Hierarchichal K-Means",
+        py::arg("dim"), py::arg("m"), py::arg("layers_count"), py::arg("opened_trees"), py::arg("augmentation")
+    );
     WRAP_INDEX_HELPER(IndexHierarchicKmeans, hkm);
 
     // QUANTIZATION ----------------------------------------------------------------------------------------------------
     py::class_<IndexSubspaceQuantization> sq(m, "IndexSQ");
     WRAP_INDEX_HELPER(IndexSubspaceQuantization, sq);
-
-}
+*/

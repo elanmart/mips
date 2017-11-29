@@ -32,6 +32,7 @@ int main(int argc, char **argv) {
         sscanf(argv[3], "%f", &r);
         augtype = atoi(argv[4]);
         sscanf(argv[5], "%f", &U);
+        
         faiss::Index* index = bench_train(get_trained_index);
         bench_add(index);
         bench_query(index);
