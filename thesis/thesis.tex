@@ -1,0 +1,90 @@
+\documentclass[12pt]{article}
+\usepackage{indentfirst}
+\usepackage[utf8]{inputenc}
+\usepackage[a4paper,left=0.7in,right=0.7in,top=0.8in,bottom=0.8in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[hidelinks]{hyperref}
+\usepackage{array}
+
+% make references appear in table of contents
+\usepackage{tocbibind}
+
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black}
+\setlength\parindent{20pt}
+
+% maths
+\usepackage{bm}
+\usepackage{mathtools}
+\DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+
+\begin{document}
+\thispagestyle{empty}
+\begin{center}
+	\begin{Large}
+	Poznan University of Technology\\
+	Faculty of Computing\\
+	Institute of Computing Science\\
+	\end{Large}
+	\vspace*{\fill}
+		\begin{Large}
+			Engineering Diploma Thesis\\
+			\vspace{2ex}
+			Library for fast classification in problems with large number of classes\\
+			\vspace{2ex}
+		\end{Large}
+		\begin{large}
+			\vspace{2ex}
+			Marcin Elantkowski\\
+			Adam Krasuski\\
+			Agnieszka Lipska\\
+			Franciszek Walkowiak\\
+		\end{large}
+	\vspace*{\fill}
+\end{center}
+\begin{large}
+	\flushright{Thesis supervisor: Ph. D. Krzysztof Dembczyński}\\
+\end{large}
+\begin{center}
+	\vspace{5ex}
+	Poznań, 2017
+\end{center}
+\newpage
+\tableofcontents
+\section{Introduction}
+	\input{tex/introduction.tex}
+\section{The aim and scope of thesis}
+	\input{tex/scope.tex}
+\section{Description of problem}
+	\input{tex/description.tex}
+\section{Theoretical description of algorithms}
+	\subsection{Hierarchical k-means}
+	\input{tex/kmeans.tex}
+	\subsection{Quantization-based inner product search}
+	\input{tex/quantization.tex}
+	\subsection{Asymmetric locality sensitive hashing}
+	\input{tex/alsh.tex}
+\section{Implementation}
+	\input{tex/implementation.tex}
+\section{Analysis of results}
+	\input{tex/analysis.tex}
+\section{Conculsions}
+	\input{tex/conclusions.tex}
+	\begin{thebibliography}{90}
+		\bibitem{kmeans}
+		Alex Auvolat, Hugo Larochelle, Sarath Chandar, Pascal Vincent, Yoshua Bengio
+		\textit{Clustering is efficient for approximate maximum inner product search}
+
+		\bibitem{quantization}
+		Ruiqi Guo, Sanjiv Kumar, Krzysztof Choromanski, David Simcha
+		\textit{Quantization based fast inner product search}
+
+		\bibitem{alsh}
+		Anshumali Shrivastava, Ping Li
+		\textit{Asymmetric LSH for sublinear maximum inner product search}
+	\end{thebibliography}
+\end{document}
