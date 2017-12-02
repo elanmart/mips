@@ -1,6 +1,6 @@
-The Asymmetric Locality Sensitive Hashing \cite{alsh} algorithm builds an index based on hash tables.
+The Asymmetric Locality Sensitive Hashing (ALSH) \cite{alsh} algorithm builds an index based on hash tables.
 First, one should divide all database vectors' components by the maximum norm of any vector.
-This divisor can optionally be multiplied by a number from  $[0,1]$ interval.
+This divisor can optionally be multiplied by $U \in [0,1]$.
 After such scaling $m$ components in the form of $|x_i|^2$, $|x_i|^4$, $|x_i|^8$, $ ...$, $|x_i|^{2^m}$ should be added at the end of each vector $x_i$.
 \par
 The index consists of $L$ hash tables.
@@ -12,7 +12,8 @@ $N$ denotes Gaussian distribution and $U$ denotes random uniform distribution.
 h_{i,j}(\bm{x}) = \floor*{\frac{\bm{a_{i,j}^T x} + b_{i,j}}{r}}, \bm{a_{i,j}} \sim N(0,1), b_{i,j} \sim U(0,r)
 \end{equation*}
 \par
-An example of preparation of $L = 2$ hash tables for a database having 4 vectors: $x_1, x_2, x_3$ and $x_4$ is presented below.
+Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole algorithm, also in the querying phase. The algorithm has a total of 5 parameters: $m$, $U$, $L$, $K$ and $r$.
+Preparation of $L = 2$ hash tables for a database having 4 vectors: $x_1, x_2, x_3$ and $x_4$ is presented below.
 \\
 Computations of vectors' keys in first table:\\
 $H_{1,1} = [h_{1,1}(x_1), h_{2,1}(x_1), h_{3,1}(x_1)] = [0, 1, 0]$\\
@@ -60,3 +61,6 @@ Found vectors are supposed to show similarity to $q$.
 $x_1$ and $x_4$ turned out to be similar to $q$ according to first table, but only $x_4$ appears to be similar to query according to second table.
 In real-world scenarios, a ranking of vectors is made that is sorted by number of tables in which a collision between query and vector occurred.
 Ultimately, $x_4$ is the most similar vector to query, because the collision happened in both tables.
+\par
+It is possible to augment (append additional components at the end) the vectors in different ways or there can be no augmentation at all.
+Another way the vectors can be modified is to append further $m$ scalars equal to $\frac{1}{2}$ to vectors, and $m$ scalars $|q|^2$, $|q|^4$, $|q|^8$, $...$, $|q|^{2^m}$ to query.
