@@ -8,6 +8,8 @@ CMakeLists.txt
 python/*.so
 output.txt
 *.pdf
+*.aux
+*.toc
 
 # Created by .ignore support plugin (hsz.mobi)
 ### JetBrains template

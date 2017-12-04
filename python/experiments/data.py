@@ -86,7 +86,7 @@ def get_data(path, name='train', force=False,
         X = load_csr(X_PATH)
         Y = load_csr(Y_PATH)
 
-        return X, Y
+        return X, Y, None, None
 
     # data only in libsvm
     logging.info(f"Data not found or `force` flag was passed, I'm going to prepare it and store at {X_PATH}.")

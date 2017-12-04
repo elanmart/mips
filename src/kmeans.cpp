@@ -156,22 +156,21 @@ void IndexHierarchicKmeans::reset() {
 
 void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k, 
         float* distances, idx_t* labels) const {
+
     FloatMatrix queries_original;
     queries_original.resize(n, d);
     memcpy(queries_original.data.data(), data, n * d * sizeof(float));
     FloatMatrix queries = augmentation->extend_queries(data, n);
 
-    FlatMatrix<idx_t> labels_matrix;
-    labels_matrix.resize(n, k);
     #pragma omp parallel for
     for (size_t i = 0; i < queries.vector_count(); i++) {
         vector<size_t> predictions = predict(layers, queries, i, opened_trees, k);
         for (idx_t j = 0; j < k; j++) {
-            labels_matrix.at(i, j) = (size_t(j) < predictions.size()) ? predictions[j] : -1;
+            labels[i*k + j] = (size_t(j) < predictions.size()) ? predictions[j] : -1;
         }
 
         for (idx_t j = 0; j < k; j++) {
-            idx_t lab = labels_matrix.at(i, j);
+            idx_t lab = labels[i * k + j];
             if (lab != -1) {
                 distances[i * k + j] = faiss::fvec_inner_product(
                     vectors_original.row(lab),
@@ -181,7 +180,6 @@ void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
             }
         }
     }
-    memcpy(labels, labels_matrix.data.data(), n * k * sizeof(idx_t));
 }
 
 static void write_floatmatrix(const FloatMatrix& mat, FILE* f) {
