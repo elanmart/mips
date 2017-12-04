@@ -3,8 +3,11 @@
 #include "../faiss/Index.h"
 
 struct IndexHierarchicKmeans: public faiss::Index {
+    struct range {
+        size_t left, right;
+    };
     struct layer_t {
-        std::vector<std::pair<size_t, size_t>> children_range;
+        std::vector<range> children_range;
         FloatMatrix points;
     };
 
@@ -14,8 +17,9 @@ struct IndexHierarchicKmeans: public faiss::Index {
     void reset();
     // void train(idx_t n, const float* data);
     
+    void save(const char* fname) const;
+    void load(const char* fname);
 
-    FloatMatrix vectors;
     FloatMatrix vectors_original;
     std::vector<layer_t> layers;
 

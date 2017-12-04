@@ -39,7 +39,7 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L) {
         auto kr = perform_kmeans(layers[layer_id - 1].points, cluster_num);
 
         vector<vector<FloatMatrix>> prev_layer(cluster_num);
-        vector<vector<pair<size_t, size_t>>> prev_layer_range(cluster_num);
+        vector<vector<IndexHierarchicKmeans::range>> prev_layer_range(cluster_num);
 
         for (size_t i = 0; i < kr.assignments.size(); i++) {
             auto cid = kr.assignments[i];
@@ -103,8 +103,8 @@ static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& querie
 
         for (auto val_cid: candidates) {
             size_t cid = val_cid.second;
-            for (size_t i = layers[layer_id].children_range[cid].first;
-                       i < layers[layer_id].children_range[cid].second; i++) {
+            for (size_t i = layers[layer_id].children_range[cid].left;
+                       i < layers[layer_id].children_range[cid].right; i++) {
                 
                 float result = faiss::fvec_inner_product(
                         query,
@@ -130,7 +130,7 @@ static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& querie
 
     vector<size_t> res;
     for (size_t i = 0; i < candidates.size(); i++) {
-        res.push_back(layers[0].children_range[candidates[i].second].first);
+        res.push_back(layers[0].children_range[candidates[i].second].left);
     }
     return res;
 }
@@ -145,12 +145,11 @@ IndexHierarchicKmeans::IndexHierarchicKmeans(
 void IndexHierarchicKmeans::add(idx_t n, const float* data) {
     vectors_original.resize(n, d);
     memcpy(vectors_original.data.data(), data, n * d * sizeof(float));
-    vectors = augmentation->extend(data, n);
+    auto vectors = augmentation->extend(data, n);
     layers = make_layers(vectors, layers_count);
 }
 
 void IndexHierarchicKmeans::reset() {
-    vectors.data.clear();
     vectors_original.data.clear();
     layers.clear();
 }
@@ -183,4 +182,48 @@ void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
         }
     }
     memcpy(labels, labels_matrix.data.data(), n * k * sizeof(idx_t));
+}
+
+static void write_floatmatrix(const FloatMatrix& mat, FILE* f) {
+    fwrite(&mat.vector_length, sizeof(mat.vector_length), 1, f);
+    auto cnt = mat.vector_count();
+    fwrite(&cnt, sizeof(cnt), 1, f);
+    fwrite(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
+}
+
+void IndexHierarchicKmeans::save(const char* fname) const {
+    FILE* f = fopen(fname, "wb");
+    write_floatmatrix(vectors_original, f);
+    for (const auto& l: layers) {
+        size_t cnt = l.children_range.size();
+        fwrite(&cnt, sizeof(cnt), 1, f);
+        fwrite(l.children_range.data(), sizeof(range), l.children_range.size(), f);
+        write_floatmatrix(l.points, f);
+    }
+    fclose(f);
+}
+
+
+static void read_floatmatrix(FloatMatrix& mat, FILE* f) {
+    size_t len, cnt;
+    fread(&len, sizeof(len), 1, f);
+    fread(&cnt, sizeof(cnt), 1, f);
+    mat.resize(cnt, len);
+    fread(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
+}
+
+void IndexHierarchicKmeans::load(const char* fname) {
+    FILE* f = fopen(fname, "rb");
+    // Assume parameters are already there (i.e. index was constructed using
+    // provided constructor).
+    read_floatmatrix(vectors_original, f);
+    layers.resize(layers_count + 1);
+    for (auto& l: layers) {
+        size_t cnt;
+        fread(&cnt, sizeof(cnt), 1, f);
+        l.children_range.resize(cnt);
+        fread(l.children_range.data(), sizeof(range), l.children_range.size(), f);
+        read_floatmatrix(l.points, f);
+    }
+    fclose(f);
 }
