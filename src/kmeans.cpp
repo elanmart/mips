@@ -18,26 +18,56 @@ using layer_t = IndexHierarchicKmeans::layer_t;
 
 
 static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L) {
-    vector<layer_t> layers = vector<layer_t>(L);
+    vector<layer_t> layers = vector<layer_t>(L + 1);
 
-    for (size_t layer_id = 0; layer_id < L; layer_id++) {
-        layer_t& layer = layers[layer_id];
+    size_t cnt = vectors.vector_count();
+    layers[0].children_range.resize(cnt);
+    layers[0].points.resize(cnt, vectors.vector_length);
+    for (size_t i = 0; i < cnt; i++) {
+        layers[0].children_range[i] = {i, i};
+        memcpy(
+                layers[0].points.row(i), 
+                vectors.row(i), 
+                sizeof(float) * vectors.vector_length);
+    }
 
+    for (size_t layer_id = 1; layer_id < L + 1; layer_id++) {
         // Compute number of clusters and cluster size on this layer.
-        size_t cluster_size = floor(
-                pow(vectors.vector_count(), (layer_id + 1) / (float) (L + 1)));
+        size_t cluster_num = floor(
+                pow(vectors.vector_count(), (L + 1 - layer_id) / (float) (L + 1)));
 
-        layer.cluster_num = floor(
-                vectors.vector_count() / (float) cluster_size);
+        auto kr = perform_kmeans(layers[layer_id - 1].points, cluster_num);
 
-        const FloatMatrix& points = (layer_id == 0) ?
-               vectors : layers[layer_id - 1].kr.centroids;
+        vector<vector<FloatMatrix>> prev_layer(cluster_num);
+        vector<vector<pair<size_t, size_t>>> prev_layer_range(cluster_num);
 
-        layer.kr = perform_kmeans(points, layer.cluster_num);
+        for (size_t i = 0; i < kr.assignments.size(); i++) {
+            auto cid = kr.assignments[i];
+            FloatMatrix row;
+            row.resize(1, vectors.vector_length);
+            memcpy(
+                    row.row(0),
+                    layers[layer_id - 1].points.row(i),
+                    sizeof(float) * vectors.vector_length);
+            prev_layer[cid].push_back(row);
+            prev_layer_range[cid].push_back(layers[layer_id - 1].children_range[i]);
+        }
 
-        layer.centroid_children.resize(layer.cluster_num);
-        for (size_t i = 0; i < layer.kr.assignments.size(); i++) {
-            layer.centroid_children[layer.kr.assignments[i]].push_back(i);
+        layers[layer_id].points = kr.centroids;
+        layers[layer_id].children_range.resize(cluster_num);
+        size_t j = 0;
+        for (size_t i = 0; i < cluster_num; i++) {
+            size_t start = j;
+            for (size_t k = 0; k < prev_layer[i].size(); k++) {
+                memcpy(
+                        layers[layer_id - 1].points.row(j),
+                        prev_layer[i][k].row(0),
+                        sizeof(float) * vectors.vector_length);
+                layers[layer_id - 1].children_range[j] = prev_layer_range[i][k];
+                j++;
+            }
+            size_t end = j;
+            layers[layer_id].children_range[i] = {start, end};
         }
     }
 
@@ -45,66 +75,62 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L) {
 }
 
 static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& queries, size_t qnum,
-        size_t opened_trees, const FloatMatrix& vectors, size_t k_needed = 1) {
+        size_t opened_trees, size_t k_needed = 1) {
 
-    vector<size_t> candidates;
-    for (size_t i = 0; i < layers.back().cluster_num; i++) {
-        candidates.push_back(i);
+    const float* query = queries.row(qnum);
+
+    vector<pair<float, size_t>> candidates;
+    for (size_t i = 0; i < layers.back().points.vector_count(); i++) {
+        float result = faiss::fvec_inner_product(
+                query, 
+                layers.back().points.row(i),
+                queries.vector_length);
+        candidates.push_back({result, i});
     }
 
-    for (size_t layer_id = layers.size() - 1; layer_id != (size_t)(-1); layer_id--) {
-        vector<std::pair<float, size_t>> best_centroids;
-        for (auto c: candidates) {
-            float result = faiss::fvec_inner_product(
-                    queries.row(qnum), 
-                    layers[layer_id].kr.centroids.row(c),
-                    queries.vector_length);
-
-            best_centroids.push_back({result, c});
-        }
-
-        if (best_centroids.size() > opened_trees) {
+    for (size_t layer_id = layers.size() - 1; layer_id > 0; layer_id--) {
+        if (candidates.size() > opened_trees) {
             nth_element(
-                    best_centroids.begin(), 
-                    best_centroids.begin() + opened_trees,
-                    best_centroids.end(),
+                    candidates.begin(), 
+                    candidates.begin() + opened_trees,
+                    candidates.end(),
                     greater<std::pair<float, size_t>>());
-            best_centroids.resize(opened_trees);
+            candidates.resize(opened_trees);
         }
+        // sort?
 
-        candidates.clear();
+        vector<pair<float, size_t>> next_candidates;
 
-        for (auto val_cid: best_centroids) {
+        for (auto val_cid: candidates) {
             size_t cid = val_cid.second;
-            candidates.insert(candidates.end(), 
-                    layers[layer_id].centroid_children[cid].begin(),
-                    layers[layer_id].centroid_children[cid].end()
-            );
+            for (size_t i = layers[layer_id].children_range[cid].first;
+                       i < layers[layer_id].children_range[cid].second; i++) {
+                
+                float result = faiss::fvec_inner_product(
+                        query,
+                        layers[layer_id - 1].points.row(i),
+                        queries.vector_length);
+
+                next_candidates.push_back({result, i});
+            }
         }
+
+        swap(candidates, next_candidates);
     }
     // Last layer - find best match.
-    vector<std::pair<float, size_t>> best_points;
-    for (auto c: candidates) {
-        float result = faiss::fvec_inner_product(
-                queries.row(qnum), 
-                vectors.row(c),
-                queries.vector_length);
-
-        best_points.push_back({result, c});
-    }
-    if (best_points.size() > k_needed) {
+    if (candidates.size() > k_needed) {
         nth_element(
-                best_points.begin(), 
-                best_points.begin() + k_needed,
-                best_points.end(),
+                candidates.begin(), 
+                candidates.begin() + k_needed,
+                candidates.end(),
                 greater<std::pair<float, size_t>>());
-        best_points.resize(k_needed);
+        candidates.resize(k_needed);
     }
-    sort(best_points.rbegin(), best_points.rend());
+    sort(candidates.rbegin(), candidates.rend());
 
     vector<size_t> res;
-    for (size_t i = 0; i < best_points.size(); i++) {
-        res.push_back(best_points[i].second);
+    for (size_t i = 0; i < candidates.size(); i++) {
+        res.push_back(layers[0].children_range[candidates[i].second].first);
     }
     return res;
 }
@@ -140,7 +166,7 @@ void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
     labels_matrix.resize(n, k);
     #pragma omp parallel for
     for (size_t i = 0; i < queries.vector_count(); i++) {
-        vector<size_t> predictions = predict(layers, queries, i, opened_trees, vectors, k);
+        vector<size_t> predictions = predict(layers, queries, i, opened_trees, k);
         for (idx_t j = 0; j < k; j++) {
             labels_matrix.at(i, j) = (size_t(j) < predictions.size()) ? predictions[j] : -1;
         }

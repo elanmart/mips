@@ -4,9 +4,8 @@
 
 struct IndexHierarchicKmeans: public faiss::Index {
     struct layer_t {
-        kmeans_result kr;
-        std::vector<std::vector<size_t>> centroid_children;
-        size_t cluster_num;
+        std::vector<std::pair<size_t, size_t>> children_range;
+        FloatMatrix points;
     };
 
     IndexHierarchicKmeans(size_t dim, size_t layers_count, size_t opened_trees, MipsAugmentation* aug);
