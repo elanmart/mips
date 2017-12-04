@@ -17,7 +17,7 @@ using namespace std;
 using layer_t = IndexHierarchicKmeans::layer_t;
 
 
-static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L) {
+static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t nprobe) {
     vector<layer_t> layers = vector<layer_t>(L + 1);
 
     size_t cnt = vectors.vector_count();
@@ -34,7 +34,10 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L) {
     for (size_t layer_id = 1; layer_id < L + 1; layer_id++) {
         // Compute number of clusters and cluster size on this layer.
         size_t cluster_num = floor(
-                pow(vectors.vector_count(), (L + 1 - layer_id) / (float) (L + 1)));
+                pow(vectors.vector_count(), (L + 1 - layer_id) / (float) (L + 1))
+                / pow(nprobe, layer_id / (float) (L + 1))
+        );
+        printf("Layer %zu size: %zu\n", layer_id, cluster_num);
 
         auto kr = perform_kmeans(layers[layer_id - 1].points, cluster_num);
 
@@ -146,7 +149,7 @@ void IndexHierarchicKmeans::add(idx_t n, const float* data) {
     vectors_original.resize(n, d);
     memcpy(vectors_original.data.data(), data, n * d * sizeof(float));
     auto vectors = augmentation->extend(data, n);
-    layers = make_layers(vectors, layers_count);
+    layers = make_layers(vectors, layers_count, opened_trees);
 }
 
 void IndexHierarchicKmeans::reset() {

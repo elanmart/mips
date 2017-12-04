@@ -15,7 +15,6 @@ struct IndexHierarchicKmeans: public faiss::Index {
     void add(idx_t n, const float* data);
     void search(idx_t n, const float* data, idx_t k, float* distances, idx_t* labels) const;
     void reset();
-    void train(idx_t n, const float* data) {};
     
     void save(const char* fname) const;
     void load(const char* fname);

@@ -7,6 +7,7 @@
 // bench_kmeans layers_count augtype 
 //                              1     U    OT1   OT2  ...
 //                             0/2   -1    OT1   OT2  ...
+// First value of OT will be used for training.
 
 size_t m = 3; // additional vector dimensions
 float U; // vector scaling coefficient
@@ -35,9 +36,17 @@ int main(int argc, char **argv) {
         layers_count = atoi(argv[1]);
         augtype = atoi(argv[2]);
         sscanf(argv[3], "%f", &U);
+        opened_trees = atoi(argv[4]);
 
         faiss::Index* index = bench_train(get_trained_index);
-        bench_add(index);
+
+        if (1) {
+            bench_add(index);
+            ((IndexHierarchicKmeans*) index)->save("/tmp/saved");
+        }
+        else {
+            ((IndexHierarchicKmeans*) index)->load("/tmp/saved");
+        }
 
         for (int i = 4; i < argc; i++) {
             printf("Querying using opened_trees = %d\n", atoi(argv[i]));
