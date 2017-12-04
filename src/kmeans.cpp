@@ -35,7 +35,7 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
         // Compute number of clusters and cluster size on this layer.
         size_t cluster_num = floor(
                 pow(vectors.vector_count(), (L + 1 - layer_id) / (float) (L + 1))
-                / pow(nprobe, layer_id / (float) (L + 1))
+                * pow(nprobe, layer_id / (float) (L + 1))
         );
         printf("Layer %zu size: %zu\n", layer_id, cluster_num);
 
