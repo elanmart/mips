@@ -27,8 +27,8 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
     for (size_t i = 0; i < cnt; i++) {
         layers[0].children_range[i] = {i, i};
         memcpy(
-                layers[0].points.row(i), 
-                vectors.row(i), 
+                layers[0].points.row(i),
+                vectors.row(i),
                 sizeof(float) * vectors.vector_length);
     }
 
@@ -87,10 +87,7 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
 
 template <typename T>
 struct FixedQueue : public priority_queue<
-                    T, 
-                    vector<T>,
-                    greater<T>
-                                   > {
+                    T, vector<T>, greater<T>> {
     FixedQueue(size_t cap) : cap(cap) {
         this->c.reserve(cap + 1);
     }
@@ -100,11 +97,11 @@ struct FixedQueue : public priority_queue<
             this->pop();
         }
     }
-    typename std::vector<T>::iterator begin() { 
-        return this->c.begin(); 
+    typename std::vector<T>::iterator begin() {
+        return this->c.begin();
     }
-    typename std::vector<T>::iterator end() { 
-        return this->c.end(); 
+    typename std::vector<T>::iterator end() {
+        return this->c.end();
     }
     size_t cap;
 };
@@ -117,7 +114,7 @@ static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& querie
     FixedQueue<pair<float, size_t>> candidates(opened_trees);
     for (size_t i = 0; i < layers.back().points.vector_count(); i++) {
         float result = faiss::fvec_inner_product(
-                query, 
+                query,
                 layers.back().points.row(i),
                 queries.vector_length);
         candidates.add({result, i});
@@ -131,12 +128,12 @@ static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& querie
             size_t cid = val_cid.second;
             for (size_t i = layers[layer_id].children_range[cid].left;
                        i < layers[layer_id].children_range[cid].right; i++) {
-                
+
                 if (branch_n_bound && next_candidates.size() >= next_candidates.cap) {
-                    float optimistic = val_cid.first + 
+                    float optimistic = val_cid.first +
                         layers[layer_id - 1].dist_to_parent[i];
-                    float worst_so_far = next_candidates.top().first;
-                    if (optimistic < worst_so_far) continue;
+                    float worst_good = next_candidates.top().first;
+                    if (optimistic < worst_good) continue;
                 }
                 float result = faiss::fvec_inner_product(
                         query,
@@ -163,7 +160,7 @@ IndexHierarchicKmeans::IndexHierarchicKmeans(
         size_t dim, size_t layers_count, size_t opened_trees,
            MipsAugmentation* aug, bool branch_n_bound):
     Index(dim, faiss::METRIC_INNER_PRODUCT),
-    layers_count(layers_count), opened_trees(opened_trees), 
+    layers_count(layers_count), opened_trees(opened_trees),
     branch_n_bound(branch_n_bound),
     augmentation(aug)
 {
@@ -181,7 +178,7 @@ void IndexHierarchicKmeans::reset() {
     layers.clear();
 }
 
-void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k, 
+void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
         float* distances, idx_t* labels) const {
 
     FloatMatrix queries_original;
@@ -193,7 +190,7 @@ void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
     for (size_t i = 0; i < queries.vector_count(); i++) {
         vector<size_t> predictions = predict(layers, queries, i, opened_trees, branch_n_bound, k);
         for (idx_t j = 0; j < k; j++) {
-            labels[i*k + j] = (size_t(j) < predictions.size()) ? predictions[j] : -1;
+            labels[i * k + j] = (size_t(j) < predictions.size()) ? predictions[j] : -1;
         }
 
         for (idx_t j = 0; j < k; j++) {
