@@ -24,15 +24,16 @@ PYBIND11_MODULE(mips, m) {
     py::class_<IndexHierarchicKmeans> kmns(m, "IndexHierarchicKmeans");
     kmns.def(
         py::init([](size_t dim, size_t layers_count, size_t opened_trees, 
-                    MipsAugmentationShrivastava& augmentation) {
+                    MipsAugmentationShrivastava& augmentation, bool branch_n_bound) {
                         return std::unique_ptr<IndexHierarchicKmeans>(
                             new IndexHierarchicKmeans(dim,
                                                       layers_count,
                                                       opened_trees,
-                                                      &augmentation));
+                                                      &augmentation, 
+                                                      branch_n_bound));
                     }),
         "IndexHierarchicKmeans",
-        py::arg("dim"), py::arg("layers_count"), py::arg("opened_trees"), py::arg("augmentation")
+        py::arg("dim"), py::arg("layers_count"), py::arg("opened_trees"), py::arg("augmentation"), py::arg("branch_n_bound")
     );
     WRAP_INDEX_HELPER(IndexHierarchicKmeans, kmns);
 
