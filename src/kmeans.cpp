@@ -12,6 +12,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <queue>
 
 using namespace std;
 using layer_t = IndexHierarchicKmeans::layer_t;
@@ -58,6 +59,9 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
 
         layers[layer_id].points = kr.centroids;
         layers[layer_id].children_range.resize(cluster_num);
+        size_t cnt = layers[layer_id - 1].points.vector_count();
+        layers[layer_id - 1].dist_to_parent.resize(cnt);
+
         size_t j = 0;
         for (size_t i = 0; i < cluster_num; i++) {
             size_t start = j;
@@ -67,6 +71,10 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
                         prev_layer[i][k].row(0),
                         sizeof(float) * vectors.vector_length);
                 layers[layer_id - 1].children_range[j] = prev_layer_range[i][k];
+                layers[layer_id - 1].dist_to_parent[j] = sqrt(faiss::fvec_L2sqr(
+                        layers[layer_id - 1].points.row(j),
+                        kr.centroids.row(i),
+                        kr.centroids.vector_length));
                 j++;
             }
             size_t end = j;
@@ -77,71 +85,87 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
     return layers;
 }
 
+template <typename T>
+struct FixedQueue : public priority_queue<
+                    T, 
+                    vector<T>,
+                    greater<T>
+                                   > {
+    FixedQueue(size_t cap) : cap(cap) {
+        this->c.reserve(cap + 1);
+    }
+    void add (T p) {
+        this->push(p);
+        if (this->size() > cap) {
+            this->pop();
+        }
+    }
+    typename std::vector<T>::iterator begin() { 
+        return this->c.begin(); 
+    }
+    typename std::vector<T>::iterator end() { 
+        return this->c.end(); 
+    }
+    size_t cap;
+};
+
 static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& queries, size_t qnum,
-        size_t opened_trees, size_t k_needed = 1) {
+        size_t opened_trees, bool branch_n_bound, size_t k_needed = 1) {
 
     const float* query = queries.row(qnum);
 
-    vector<pair<float, size_t>> candidates;
+    FixedQueue<pair<float, size_t>> candidates(opened_trees);
     for (size_t i = 0; i < layers.back().points.vector_count(); i++) {
         float result = faiss::fvec_inner_product(
                 query, 
                 layers.back().points.row(i),
                 queries.vector_length);
-        candidates.push_back({result, i});
+        candidates.add({result, i});
     }
 
     for (size_t layer_id = layers.size() - 1; layer_id > 0; layer_id--) {
-        if (candidates.size() > opened_trees) {
-            nth_element(
-                    candidates.begin(), 
-                    candidates.begin() + opened_trees,
-                    candidates.end(),
-                    greater<std::pair<float, size_t>>());
-            candidates.resize(opened_trees);
-        }
-        // sort?
-
-        vector<pair<float, size_t>> next_candidates;
+        FixedQueue<pair<float, size_t>> next_candidates(
+                (layer_id == 1) ? k_needed : opened_trees);
 
         for (auto val_cid: candidates) {
             size_t cid = val_cid.second;
             for (size_t i = layers[layer_id].children_range[cid].left;
                        i < layers[layer_id].children_range[cid].right; i++) {
                 
+                if (branch_n_bound && next_candidates.size() >= next_candidates.cap) {
+                    float optimistic = val_cid.first + 
+                        layers[layer_id - 1].dist_to_parent[i];
+                    float worst_so_far = next_candidates.top().first;
+                    if (optimistic < worst_so_far) continue;
+                }
                 float result = faiss::fvec_inner_product(
                         query,
                         layers[layer_id - 1].points.row(i),
                         queries.vector_length);
 
-                next_candidates.push_back({result, i});
+                next_candidates.add({result, i});
             }
         }
 
         swap(candidates, next_candidates);
     }
-    // Last layer - find best match.
-    if (candidates.size() > k_needed) {
-        nth_element(
-                candidates.begin(), 
-                candidates.begin() + k_needed,
-                candidates.end(),
-                greater<std::pair<float, size_t>>());
-        candidates.resize(k_needed);
-    }
-    sort(candidates.rbegin(), candidates.rend());
-
-    vector<size_t> res;
-    for (size_t i = 0; i < candidates.size(); i++) {
-        res.push_back(layers[0].children_range[candidates[i].second].left);
+    vector<size_t> res(candidates.size());
+    size_t i = res.size() - 1;
+    while (!candidates.empty()) {
+        auto top = candidates.top();
+        candidates.pop();
+        res[i--] = layers[0].children_range[top.second].left;
     }
     return res;
 }
 
 IndexHierarchicKmeans::IndexHierarchicKmeans(
-        size_t dim, size_t layers_count, size_t opened_trees, MipsAugmentation* aug):
+        size_t dim, size_t layers_count, size_t opened_trees,
+           MipsAugmentation* aug, bool branch_n_bound):
     Index(dim, faiss::METRIC_INNER_PRODUCT),
-    layers_count(layers_count), opened_trees(opened_trees), augmentation(aug)
+    layers_count(layers_count), opened_trees(opened_trees), 
+    branch_n_bound(branch_n_bound),
+    augmentation(aug)
 {
 }
 
@@ -167,7 +191,7 @@ void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
 
     #pragma omp parallel for
     for (size_t i = 0; i < queries.vector_count(); i++) {
-        vector<size_t> predictions = predict(layers, queries, i, opened_trees, k);
+        vector<size_t> predictions = predict(layers, queries, i, opened_trees, branch_n_bound, k);
         for (idx_t j = 0; j < k; j++) {
             labels[i*k + j] = (size_t(j) < predictions.size()) ? predictions[j] : -1;
         }
@@ -192,13 +216,19 @@ static void write_floatmatrix(const FloatMatrix& mat, FILE* f) {
     fwrite(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
 }
 
+template <typename T>
+static void write_vec(const vector<T>& vec, FILE* f) {
+    size_t cnt = vec.size();
+    fwrite(&cnt, sizeof(cnt), 1, f);
+    fwrite(vec.data(), sizeof(T), vec.size(), f);
+}
+
 void IndexHierarchicKmeans::save(const char* fname) const {
     FILE* f = fopen(fname, "wb");
     write_floatmatrix(vectors_original, f);
     for (const auto& l: layers) {
-        size_t cnt = l.children_range.size();
-        fwrite(&cnt, sizeof(cnt), 1, f);
-        fwrite(l.children_range.data(), sizeof(range), l.children_range.size(), f);
+        write_vec(l.children_range, f);
+        write_vec(l.dist_to_parent, f);
         write_floatmatrix(l.points, f);
     }
     fclose(f);
@@ -213,6 +243,14 @@ static void read_floatmatrix(FloatMatrix& mat, FILE* f) {
     fread(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
 }
 
+template <typename T>
+static void read_vec(vector<T>& vec, FILE* f) {
+    size_t cnt;
+    fread(&cnt, sizeof(cnt), 1, f);
+    vec.resize(cnt);
+    fread(vec.data(), sizeof(T), vec.size(), f);
+}
+
 void IndexHierarchicKmeans::load(const char* fname) {
     FILE* f = fopen(fname, "rb");
     // Assume parameters are already there (i.e. index was constructed using
@@ -220,10 +258,8 @@ void IndexHierarchicKmeans::load(const char* fname) {
     read_floatmatrix(vectors_original, f);
     layers.resize(layers_count + 1);
     for (auto& l: layers) {
-        size_t cnt;
-        fread(&cnt, sizeof(cnt), 1, f);
-        l.children_range.resize(cnt);
-        fread(l.children_range.data(), sizeof(range), l.children_range.size(), f);
+        read_vec(l.children_range, f);
+        read_vec(l.dist_to_parent, f);
         read_floatmatrix(l.points, f);
     }
     fclose(f);
