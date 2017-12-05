@@ -25,21 +25,6 @@ static vector<size_t> prepare_permutation(size_t m) {
     return permutation;
 }
 
-template<typename T>
-static void print_vector(vector<T> vec) {
-    for (auto& val: vec) {
-        cout << val << " ";
-    }
-    cout << endl;
-}
-
-static void print_parts(const vector<FloatMatrix>& parts) {
-    for (const auto& mat: parts) {
-        mat.print();
-        cout << endl;
-    }
-}
-
 static void apply_permutation(float* vec, vector<size_t> permutation) {
     for (size_t i = 0; i < permutation.size(); i++) {
         size_t current = i;

@@ -8,7 +8,7 @@ struct IndexSubspaceQuantization: public faiss::Index {
     void add(idx_t n, const float* data);
     void search(idx_t n, const float* data, idx_t k, float* distances, idx_t* labels) const;
     void reset();
-    void train(idx_t n, const float* data) {};
+    void train(idx_t, const float*) {}; // For Python bindings.
     
     std::vector<kmeans_result> kmeans;
     std::vector<size_t> permutation;
