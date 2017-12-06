@@ -1,5 +1,6 @@
 \documentclass[12pt]{article}
 \usepackage{indentfirst}
+\usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage[a4paper,left=3.5cm,right=2.5cm,top=0.8in,bottom=0.8in]{geometry}
 \usepackage[T1]{fontenc}
@@ -21,6 +22,7 @@
 \usepackage{bm}
 \usepackage{mathtools}
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
+\DeclareMathOperator*{\argmax}{argmax}
 
 \begin{document}
 \thispagestyle{empty}
@@ -35,7 +37,7 @@
 		\begin{Large}
 			Engineering Diploma Thesis\\
 			\vspace{2ex}
-			Library for fast classification in problems with large number of classes\\
+			Library for fast classification in problems with large number of~classes\\
 			\vspace{2ex}
 		\end{Large}
 		\begin{large}
@@ -57,6 +59,7 @@
 \restoregeometry
 \newpage
 \tableofcontents
+\newpage
 \section{Introduction}
 	\input{tex/introduction.tex}
 \section{The aim and scope of thesis}
@@ -71,7 +74,14 @@
 	\subsection{Asymmetric locality sensitive hashing}
 	\input{tex/alsh.tex}
 \section{Implementation}
-	\input{tex/implementation.tex}
+	\subsection{Faiss API description}
+	\input{tex/faissAPI.tex}
+	\subsection{Hierarchical k-means}
+	\input{tex/kmeans_implementation.tex}
+	\subsection{Quantization-based inner product search}
+	\input{tex/quantization_implementation.tex}
+	\subsection{Asymmetric locality sensitive hashing}
+	\input{tex/alsh_implementation.tex}
 \section{Analysis of results}
 	\input{tex/analysis.tex}
 \section{Conculsions}
@@ -88,5 +98,9 @@
 		\bibitem{alsh}
 		Anshumali Shrivastava, Ping Li
 		\textit{Asymmetric LSH for sublinear maximum inner product search}
+
+		\bibitem{koza}
+		John R. Koza, Forrest H. Bennett III, David Andre, Martin A. Keane
+		\textit{Automated Design of Both the Topology and Sizing of Analog Electrical Circuits Using Genetic Programming}
 	\end{thebibliography}
 \end{document}

@@ -1,1 +1,20 @@
-[Write description of problem here.]
+To start with, we should tell what machine learning is. 
+One of the definitions described it as the field of study that gives a computer the ability to ,,learn to solve problems without being explicitly programmed" \cite{koza}. 
+Machine learning problems are categorized into two groups: supervised learning and unsupervised learning. 
+The difference between these two is that in supervised learning we already have a data set and correct output. 
+In unsupervised learning we just want to find relationships in data and based on it divide it into clusters.
+%opisać szczegółowo nadzorowane i nie i machine learning
+\par
+The classification problem is a supervised learning problem, where we want to predict to which classes a new query fits best. 
+There are many well-known algorithms to solve this problem but when we think about a lot of classes, e.g. millions, these algoritms often need a lot of time to find an exact solution. 
+Applications of classification can be found in recomendation systems and on-line advertising.
+\par
+We focused on a problem called Maximum Inner Product Search and it is stated as follows: 
+\[ \argmax_{x \in S} q^T x \]
+It is a classification problem where we want to classify a huge number of items $q$  to a huge number of classes $x$ belonging to set $S$. 
+%mips szerzej
+Often there is no need to have an exact result. 
+Some vectors having high inner product with query may be good enough. 
+To speed up we try to approximate result. 
+It is important to find a balance between speedup and precision. 
+In this work we will focus on three algorithms which can solve this problem.
