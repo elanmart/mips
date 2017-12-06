@@ -25,6 +25,7 @@ struct IndexALSH: public faiss::Index {
     void train(idx_t, const float*) {}; // For Python bindings.
 
     std::vector<lsh_metahash_t> metahashes;
+    FloatMatrix data_matrix;
 
     
     // Parameters:

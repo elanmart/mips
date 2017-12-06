@@ -10,6 +10,7 @@
 #include <cassert>
 #include <map>
 #include <set>
+#include <unordered_set>
 #include <algorithm>
 #include <omp.h>
 
@@ -17,12 +18,6 @@
 #include "../faiss/Clustering.h"
 
 using namespace std;
-
-bool sort_pred(
-        const std::pair<faiss::Index::idx_t, int> left,
-           const std::pair<faiss::Index::idx_t, int> right) {
-    return left.second > right.second;
-}
 
 int IndexALSH::dot_product_hash(
         const float* a, const float* x, const float b) const {
@@ -76,29 +71,37 @@ lsh_metahash_t::hash_t IndexALSH::calculate_metahash(size_t l, const float* data
 }
 
 vector<faiss::Index::idx_t> IndexALSH::answer_query(float *query, size_t k_needed) const {
-    map<idx_t, int> score;
+    unordered_set<idx_t> colliders;
     for (size_t l = 0; l < L; l++) {
         const auto it = metahashes[l].table.find(calculate_metahash(l, query));
         if (it != metahashes[l].table.end()) {
-            // Increase score of all vectors colliding with query in this metahash.
+            // Insert every colliding vector to set.
             for (const auto vec_id: it->second) {
-                score[vec_id]++;
+                colliders.insert(vec_id);
             }
         }
     }
-    vector<pair<idx_t, int> > score_vector(score.begin(), score.end());
+    // Calculate inner product of every collider with query.
+    vector<pair<float, idx_t>> score_vector(colliders.size());
+    size_t i = 0;
+    for (auto ind: colliders) {
+        float result = faiss::fvec_inner_product(
+                data_matrix.row(ind),
+                query,
+                data_matrix.vector_length);
+        score_vector[i++] = {-result, ind};
+    }
     if (score_vector.size() > k_needed) {
         nth_element(
             score_vector.begin(), 
             score_vector.begin() + k_needed, 
-            score_vector.end(),
-            sort_pred);
+            score_vector.end());
         score_vector.resize(k_needed);
     }
-    sort(score_vector.begin(), score_vector.end(), sort_pred);
-    vector<idx_t> res;
+    sort(score_vector.begin(), score_vector.end());
+    vector<idx_t> res(score_vector.size());
     for (size_t i = 0; i < score_vector.size(); i++) {
-        res.push_back(score_vector[i].first);
+        res[i] = score_vector[i].second;
     }
     return res;
 }
@@ -128,7 +131,7 @@ void IndexALSH::reset() {
 }
 
 void IndexALSH::add(idx_t n, const float* data) {
-    FloatMatrix data_matrix = augmentation->extend(data, n);
+    data_matrix = augmentation->extend(data, n);
     hash_vectors(data_matrix);
 }
 
