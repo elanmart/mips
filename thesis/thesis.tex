@@ -7,8 +7,13 @@
 \usepackage[T1]{fontenc}
 \usepackage[hidelinks]{hyperref}
 \usepackage{array}
-\usepackage{minted}
+\usepackage[cache=false]{minted}
 \usepackage{hhline}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+
+% backgound color for code listings
+\definecolor{bg}{rgb}{0.92,0.92,0.92}
 
 % make references appear in table of contents
 \usepackage{tocbibind}
@@ -89,23 +94,9 @@
 	\input{tex/analysis.tex}
 \section{Conculsions}
 	\input{tex/conclusions.tex}
-	\begin{thebibliography}{90}
-		\bibitem{kmeans}
-		Alex Auvolat, Hugo Larochelle, Sarath Chandar, Pascal Vincent, Yoshua Bengio
-		\textit{Clustering is efficient for approximate maximum inner product search}
-
-		\bibitem{quantization}
-		Ruiqi Guo, Sanjiv Kumar, Krzysztof Choromanski, David Simcha
-		\textit{Quantization based fast inner product search}
-
-		\bibitem{alsh}
-		Anshumali Shrivastava, Ping Li
-		\textit{Asymmetric LSH for sublinear maximum inner product search}
-
-		\bibitem{koza}
-		John R. Koza, Forrest H. Bennett III, David Andre, Martin A. Keane
-		\textit{Automated Design of Both the Topology and Sizing of Analog Electrical Circuits Using Genetic Programming}
-	\end{thebibliography}
+\bibliographystyle{plain}
+\bibliography{bibliogr}
+\newpage
 \section{Appendices}
 \appendix
 \section{Configuring the environment}
