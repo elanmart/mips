@@ -1,1 +1,73 @@
-[Write description of quantization here.]
+The first step in this algorithm is to permute all database vectors.
+Permutation should be fixed (the same for all vectors \textit{and} queries) and random.
+Next, each vector should be mapped into $K$ subspaces, i.e. divided into $K$ parts with equal number of components.
+Then for $i$-th part of vectors, we have set $P_i$ of $i$-th parts of all vectors in database.
+For each set $P_k$, k-means procedure is performed giving $c$ centroids and assignments of parts in $P_k$ to these centroids.
+We perform k-means in order to minimize squared error represented as ...
+\par
+To search the index with query $q$ it is necessary to permute it using the same fixed permutation as for database vectors.
+After that, a table $T$ having $K$ columns and $k$ rows is created.
+Table entry $T_{i,j}$ is a dot product between $i$-th part of query and $j$-th centroid assigned to set $P_i$.
+Query's inner product with vector $x_l$ can be approximated as $$\sum_{i=0}^{K} T_{i,c_{i,l}}$$
+where $c_{i,l}$ is the centroid assigned to vector $l$ in part $i$. Algorithm results in vectors with highest such approximations.
+Consider set of $n = 5$ vectors already divided into $K = 4$ parts:
+
+\smallskip
+
+\begin{center}
+\begin{tabular}{c|c|c|c|c|}
+\hhline{~----}
+$x_1$ = & $p_{1,1}$ & $p_{1,2}$ & $p_{1,3}$ & $p_{1,4}$ \\
+\hhline{~----}
+$x_2$ = & $p_{2,1}$ & $p_{2,2}$ & $p_{2,3}$ & $p_{2,4}$ \\
+\hhline{~----}
+$x_3$ = & $p_{3,1}$ & $p_{3,2}$ & $p_{3,3}$ & $p_{3,4}$ \\
+\hhline{~----}
+$x_4$ = & $p_{4,1}$ & $p_{4,2}$ & $p_{4,3}$ & $p_{4,4}$ \\
+\hhline{~----}
+$x_5$ = & $p_{5,1}$ & $p_{5,2}$ & $p_{5,3}$ & $p_{5,4}$ \\
+\hhline{~----}
+\end{tabular}
+$\ \ \ \ \ P_i = \{ p_{1,i}, p_{2,i}, \ldots, p_{n,i} \}$ \\
+\end{center}
+
+\smallskip
+
+Let us assume that each set $P_i$ (column) has been clustered to $k=2$ centroids ($C_{1,x}, C_{2,x}, x \in \{1,2,3,4\}$) as shown below. Note that clusters are independent in each set.
+\smallskip
+\begin{center}
+\begin{tabular}{c|c|c|c|c|}
+\hhline{~----}
+$x_1$ & $C_{2,1}$ & $C_{1,2}$ & $C_{2,3}$ & $C_{1,4}$ \\
+\hhline{~----}
+$x_2$ & $C_{1,1}$ & $C_{1,2}$ & $C_{2,3}$ & $C_{1,4}$ \\
+\hhline{~----}
+$x_3$ & $C_{2,1}$ & $C_{2,2}$ & $C_{2,3}$ & $C_{1,4}$ \\
+\hhline{~----}
+$x_4$ & $C_{1,1}$ & $C_{2,2}$ & $C_{1,3}$ & $C_{2,4}$ \\
+\hhline{~----}
+$x_5$ & $C_{1,1}$ & $C_{1,2}$ & $C_{2,3}$ & $C_{2,4}$ \\
+\hhline{~----}
+\end{tabular}
+\end{center}
+
+\smallskip
+
+After dividing query into parts $q_1, q_2, \ldots, q_K$ the pre-computed table $T$ will look as follows:
+\smallskip
+\renewcommand{\arraystretch}{1.6}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline
+$ q_1^T C_{1,1} $ & $ q_2^T C_{1,2} $ & $ q_3^T C_{1,3} $ & $ q_4^T C_{1,4} $ \\
+\hline
+$ q_1^T C_{2,1} $ & $ q_2^T C_{2,2} $ & $ q_3^T C_{2,3} $ & $ q_4^T C_{2,4} $\\
+\hline
+\end{tabular}
+\end{center}
+
+\smallskip
+
+Based on that these are example approximations which can be made:
+\[ q^T x_3 \approx q_1^T C_{2,1} + q_2^T C_{2,2} + q_3^T C_{2,3} + q_4^T C_{1,4} \]
+\[ q^T x_5 \approx q_1^T C_{1,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{2,4} \]
