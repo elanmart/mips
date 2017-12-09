@@ -1,4 +1,7 @@
-% compile with pdflatex -shell-escape thesis.tex
+% compilation:
+% pdflatex -shell-escape thesis.tex
+% bibtex thesis
+% pdflatex -shell-escape thesis.tex
 \documentclass[12pt]{article}
 \usepackage{indentfirst}
 \usepackage{amsmath}
@@ -18,12 +21,6 @@
 % make references appear in table of contents
 \usepackage{tocbibind}
 
-\hypersetup{
-    colorlinks,
-    citecolor=black,
-    filecolor=black,
-    linkcolor=black,
-    urlcolor=black}
 \setlength\parindent{20pt}
 
 % maths
@@ -82,7 +79,6 @@
 	\subsection{Asymmetric locality sensitive hashing}
 	\input{tex/alsh.tex}
 \section{Implementation}
-	\subsection{Faiss API description}
 	\input{tex/faissAPI.tex}
 	\subsection{Hierarchical k-means}
 	\input{tex/kmeans_implementation.tex}
@@ -98,6 +94,7 @@
 \bibliography{bibliogr}
 \newpage
 \section{Appendices}
+\label{sec:appendices}
 \appendix
 \section{Configuring the environment}
 	\input{tex/configuration.tex}
