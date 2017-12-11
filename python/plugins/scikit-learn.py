@@ -1,3 +1,72 @@
+import sys
+import os
+sys.path.append(os.path.abspath('/home/aga/Pulpit/mips/faiss/'))
+
+import sklearn as sk
+import numpy as np
+import scipy.sparse as sp
+from scipy import linalg
+from scipy import sparse
+from sklearn.base import BaseEstimator
+from sklearn.base import ClassifierMixin
+from sklearn.linear_model.base import SparseCoefMixin
+#import faiss
+
+class LinearClassifierMixin(ClassifierMixin):
+
+    def decision_function(self, X):
+        if not hasattr(self, 'coef_') or self.coef_ is None:
+            raise NotFittedError("This %(name)s instance is not fitted "
+                                 "yet" % {'name': type(self).__name__})
+
+        X = check_array(X, accept_sparse='csr')
+
+        n_features = self.coef_.shape[1]
+        if X.shape[1] != n_features:
+            raise ValueError("X has %d features per sample; expecting %d"
+                             % (X.shape[1], n_features))
+
+        scores = safe_sparse_dot(X, self.coef_.T,
+                                 dense_output=True) + self.intercept_
+        return scores.ravel() if scores.shape[1] == 1 else scores
+
+    def predict(self, X):
+
+        scores = self.decision_function(X)
+        if len(scores.shape) == 1:
+            indices = (scores > 0).astype(np.int)
+        else:
+            indices = scores.argmax(axis=1)
+        return self.classes_[indices]
+
+    def _predict_proba_lr(self, X):
+
+        prob = self.decision_function(X)
+        prob *= -1
+        np.exp(prob, prob)
+        prob += 1
+        np.reciprocal(prob, prob)
+        if prob.ndim == 1:
+            return np.vstack([1 - prob, prob]).T
+        else:
+            # OvR normalization, like LibLinear's predict_probability
+            prob /= prob.sum(axis=1).reshape((prob.shape[0], -1))
+            return prob
+
+    def train_internal_index():
+        super().train(mode)
+        
+        if (mode is False) and self.train_on_eval:
+            w = self._as_np(self.weight)
+            self.index.train(w)
+            self.index.add(w)
+            
+        return self
+
+    def _default_index(self, d):
+        index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
+        index.nprobe = 256        
+        return index
 class LogisticRegression(BaseEstimator, LinearClassifierMixin,
                          SparseCoefMixin):
 
@@ -145,45 +214,4 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
     def predict_log_proba(self, X):
         return np.log(self.predict_proba(X))
 
-
-class LinearClassifierMixin(ClassifierMixin):
-
-    def decision_function(self, X):
-        if not hasattr(self, 'coef_') or self.coef_ is None:
-            raise NotFittedError("This %(name)s instance is not fitted "
-                                 "yet" % {'name': type(self).__name__})
-
-        X = check_array(X, accept_sparse='csr')
-
-        n_features = self.coef_.shape[1]
-        if X.shape[1] != n_features:
-            raise ValueError("X has %d features per sample; expecting %d"
-                             % (X.shape[1], n_features))
-
-        scores = safe_sparse_dot(X, self.coef_.T,
-                                 dense_output=True) + self.intercept_
-        return scores.ravel() if scores.shape[1] == 1 else scores
-
-    def predict(self, X):
-
-        scores = self.decision_function(X)
-        if len(scores.shape) == 1:
-            indices = (scores > 0).astype(np.int)
-        else:
-            indices = scores.argmax(axis=1)
-        return self.classes_[indices]
-
-    def _predict_proba_lr(self, X):
-
-        prob = self.decision_function(X)
-        prob *= -1
-        np.exp(prob, prob)
-        prob += 1
-        np.reciprocal(prob, prob)
-        if prob.ndim == 1:
-            return np.vstack([1 - prob, prob]).T
-        else:
-            # OvR normalization, like LibLinear's predict_probability
-            prob /= prob.sum(axis=1).reshape((prob.shape[0], -1))
-            return prob
 
