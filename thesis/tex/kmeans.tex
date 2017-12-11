@@ -127,8 +127,9 @@ take $O(N)$ time. It can still be not enough for extremely large datasets
 though, especially if good level of approximation is needed. A hierarchical
 K-means scheme has been proposed as a further improvement.
 
-In this approach, data vectors are, like previously, using K-means algorithm.
-The difference is, that the resulting centroids are again clustered, forming
+In this approach, data vectors are quantized, like previously,
+using K-means algorithm.
+The difference is, that the resulting centroids are clustered again, forming
 a second layer of centroids. Querying is similar to the non-hierarchical
 approach too - best top-layer centroid is selected, then its best child and
 so on. This approach can be generalized to a higher number of layers $L$ 
@@ -187,7 +188,7 @@ This limit is in practice large enough that accuracy degradation is too
 significant for this number of layers to be feasible anyway. 
 For $N=10^6$, theoretical limit is $15$ layers, corresponding to average 
 of $2.5$ children per centroid, i.e. almost binary tree.
-}. There is a problem however - there are only a few top-layer clusters, 
+}. There is a problem however - there are few top-layer clusters, 
 meaning they have many last-layer eventual descendants. That causes the
 original algorithm assumption of centroids being close to points they represent
 to become weaker. This leads to decrease in accuracy with increasing layer
@@ -207,7 +208,7 @@ products calculated is equal to
 $$ P = K_L + \sum_{i=0}^{L-1} \frac{K_i}{K_{i+1}} \cdot n $$
 In the optimal choice of $K_i$ values, partial derivatives of this expression
 with respect to $K_i$ should all be equal 0. The equation for the top layer 
-derivative is a special case, as it has extra component before the sum:
+derivative is a special case, as it has an extra component before the sum:
 $$ 
 \frac{\partial P}{\partial K_L} = 
 \frac{\partial (K_L + \frac{K_{L-1}}{K_L} \cdot n)}{\partial K_L} =
@@ -237,14 +238,14 @@ We can now see that ratios of consecutive cluster sizes is constant - in other
 words, they form a geometric progression. The first term in the sequence,
 $K_0$ is known to be equal to number of data vectors, $N$. From equation
 for derivative of $K_L$, last - $(L+1)^{th}$ - term is known to be $n$. From this,
-the common ration is calculated to be $\sqrt[L+1]{n}$. The general formula
+the common ratio is calculated to be $\sqrt[L+1]{n}$. The general formula
 for number of centroids on $i^{th}$ of $L$ layers minimizing total number of
 inner products is hence:
 $$
 K_i = N^{\frac{L+1-i}{L+1}} \cdot n^\frac{i}{L+1}
 $$
 
-For $N = 10^6$, $L = 2$ and $n = 100$, this modified equations gives cluster sizes:
+For $N = 10^6$, $L = 2$ and $n = 100$, this modified equation gives cluster sizes:
 $$ K_1 = (10^6)^{\frac{2}{3}} \cdot 100^\frac{1}{3} \approx 46416 $$
 $$ K_2 = (10^6)^{\frac{1}{3}} \cdot 100^\frac{2}{3} \approx 2154 $$
 The number of inner products is thus:
@@ -266,8 +267,12 @@ $$
 
 A roughly threefold improvement can be seen by using the theoretical optima.
 This does not mean though that the accuracy stays the same - it is possible
-for the increased cluster sizes to cause points be assigned to centroids
-further away, worsening the approximation. In either case, the centroids can
+for the change in cluster sizes to create worse quantization. Another
+possible effect can be seen when more than one best vector is required -
+in our benchmarks, top-100 candidates are returned. Smaller clusters near
+the bottom layer mean that for constant $n$ parameter, smaller number of
+data vectors will be searched.
+In either case, the centroids can
 be trained using optimal values for some value of $n$, but then be queried
 with another parameter $n$ value. Careful choosing these two parameters -
 $n_{train}$ and $n_{query}$ may lead to satisfying accuracy at shorter time.
