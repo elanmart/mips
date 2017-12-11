@@ -35,7 +35,7 @@ struct kmeans_result {
     std::vector<size_t> assignments;
 };
 
-kmeans_result perform_kmeans(const FloatMatrix& matrix, size_t k);
+kmeans_result perform_kmeans(const FloatMatrix& matrix, size_t k, bool spherical);
 
 
 void scale(float* vec, float alpha, size_t size);
