@@ -18,7 +18,7 @@ using namespace std;
 using layer_t = IndexHierarchicKmeans::layer_t;
 
 
-static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t nprobe) {
+static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t nprobe, bool spherical) {
     vector<layer_t> layers = vector<layer_t>(L + 1);
 
     size_t cnt = vectors.vector_count();
@@ -40,7 +40,7 @@ static vector<layer_t> make_layers(const FloatMatrix& vectors, size_t L, size_t 
         );
         printf("Layer %zu size: %zu\n", layer_id, cluster_num);
 
-        auto kr = perform_kmeans(layers[layer_id - 1].points, cluster_num);
+        auto kr = perform_kmeans(layers[layer_id - 1].points, cluster_num, spherical);
 
         vector<vector<FloatMatrix>> prev_layer(cluster_num);
         vector<vector<IndexHierarchicKmeans::range>> prev_layer_range(cluster_num);
@@ -158,10 +158,11 @@ static vector<size_t> predict(const vector<layer_t>& layers, FloatMatrix& querie
 
 IndexHierarchicKmeans::IndexHierarchicKmeans(
         size_t dim, size_t layers_count, size_t opened_trees,
-           MipsAugmentation* aug, bool branch_n_bound):
+           MipsAugmentation* aug, bool branch_n_bound, bool spherical):
     Index(dim, faiss::METRIC_INNER_PRODUCT),
     layers_count(layers_count), opened_trees(opened_trees),
     branch_n_bound(branch_n_bound),
+    spherical(spherical),
     augmentation(aug)
 {
 }
@@ -170,7 +171,7 @@ void IndexHierarchicKmeans::add(idx_t n, const float* data) {
     vectors_original.resize(n, d);
     memcpy(vectors_original.data.data(), data, n * d * sizeof(float));
     auto vectors = augmentation->extend(data, n);
-    layers = make_layers(vectors, layers_count, opened_trees);
+    layers = make_layers(vectors, layers_count, opened_trees, spherical);
 }
 
 void IndexHierarchicKmeans::reset() {

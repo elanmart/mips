@@ -13,7 +13,7 @@ struct IndexHierarchicKmeans: public faiss::Index {
     };
 
     IndexHierarchicKmeans(size_t dim, size_t layers_count, size_t opened_trees,
-               MipsAugmentation* aug, bool branch_n_bound);
+               MipsAugmentation* aug, bool branch_n_bound, bool spherical);
     void add(idx_t n, const float* data);
     void search(idx_t n, const float* data, idx_t k, float* distances, idx_t* labels) const;
     void reset();
@@ -29,5 +29,6 @@ struct IndexHierarchicKmeans: public faiss::Index {
     size_t layers_count;
     size_t opened_trees;
     bool branch_n_bound;
+    bool spherical;
     MipsAugmentation* augmentation;
 };

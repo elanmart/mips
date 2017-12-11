@@ -6,21 +6,26 @@
 
 #include <algorithm>
 
-
-kmeans_result perform_kmeans(const FlatMatrix<float>& matrix, size_t k) {
+kmeans_result perform_kmeans(const FlatMatrix<float>& matrix, size_t k, bool spherical) {
     kmeans_result kr;
     kr.centroids.resize(k, matrix.vector_length);
     kr.assignments.resize(matrix.vector_count());
     std::vector<float> dist(matrix.vector_count());
     std::vector<faiss::Index::idx_t> assignments(matrix.vector_count());
 
-    faiss::kmeans_clustering(
-        matrix.vector_length, 
-        matrix.vector_count(), 
-        k, 
-        matrix.data.data(), 
-        kr.centroids.data.data()
-    );
+    size_t dim = matrix.vector_length;
+    size_t n = matrix.vector_count();
+
+    faiss::ClusteringParameters cp;
+    cp.spherical = spherical;
+    faiss::Clustering clus (dim, k, cp);
+    clus.verbose = dim * n * k > (1ULL << 30);
+    // display logs if > 1Gflop per iteration
+    faiss::IndexFlatL2 index_ (dim);
+    clus.train (n, matrix.data.data(), index_);
+    memcpy(kr.centroids.data.data(),
+               clus.centroids.data(),
+               sizeof(clus.centroids[0]) * dim * k);
 
     faiss::IndexFlatL2 index(matrix.vector_length);
     index.add(kr.centroids.vector_count(), kr.centroids.data.data());

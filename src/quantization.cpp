@@ -132,7 +132,7 @@ void IndexSubspaceQuantization::add(idx_t n, const float* data) {
     kmeans.resize(subspace_count);
     for(size_t i = 0; i < subspace_count; i++) {
         cout << "Clustering for part " << i << endl;
-        kmeans[i] = perform_kmeans(parts[i], centroid_count);
+        kmeans[i] = perform_kmeans(parts[i], centroid_count, false);
     }
 }
 
