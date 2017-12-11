@@ -1,12 +1,12 @@
 The first step in quantization-based inner product search algorithm \cite{quantization} is to permute all database vectors.
 Permutation should be fixed (the same for all vectors \textit{and} queries) and random.
 Next, each vector should be mapped into $K$ subspaces, i.e. divided into $K$ parts with equal number of components.
-We have set $P_i$ of $i$-th parts of all vectors in database.
+We have set $P_i$ of $i^{th}$ parts of all vectors in database.
 For each set $P_i$, k-means procedure is performed giving $k$ centroids $C_{i,j}$ and assignments of parts in $P_i$ to these centroids.
 \par
 To search the index with query $q$ it is necessary to permute it using the same fixed permutation as for database vectors.
 After that, a table $T$ having $K$ columns and $k$ rows is created.
-Table entry $T_{i,j}$ is a dot product between $i$-th part of query and $j$-th centroid assigned to set $P_i$.
+Table entry $T_{i,j}$ is a dot product between $i^{th}$ part of query and $j^{th}$ centroid assigned to set $P_i$.
 Query's inner product with vector $x_l$ can be approximated as $$\sum_{i=1}^{K} T_{i,c_{i,l}}$$
 where $c_{i,l}$ is the centroid assigned to vector $l$ in part $i$. Algorithm results in vectors with highest such approximations.
 Consider set of $n = 5$ vectors already divided into $K = 4$ parts:

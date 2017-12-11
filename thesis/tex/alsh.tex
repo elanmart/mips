@@ -4,8 +4,8 @@ This divisor can optionally be multiplied by $U \in [0,1]$.
 After such scaling $m$ components in the form of $|x_i|^2$, $|x_i|^4$, $|x_i|^8$, $ ...$, $|x_i|^{2^m}$ should be added at the end of each vector $x_i$.
 \par
 The index consists of $L$ hash tables.
-In order to create $i$-th table it is necessary to hash database vectors using $K$ hash functions: $h_{1,i}, h_{2,i}, ..., h_{K,i}$.
-The results of hashing of vector $x_j$ will create another vector $H_{i,j} = [h_{1,i}(x_j), h_{2,i}(x_j), ..., h_{K,i}(x_j)]$. $H_{i,j}$ is the key where the number of $j$-th vector of database (in fact: $j$) should be placed in $i$-th hash table.
+In order to create $i^{th}$ table it is necessary to hash database vectors using $K$ hash functions: $h_{1,i}, h_{2,i}, ..., h_{K,i}$.
+The results of hashing of vector $x_j$ will create another vector $H_{i,j} = [h_{1,i}(x_j), h_{2,i}(x_j), ..., h_{K,i}(x_j)]$. $H_{i,j}$ is the key where the number of $j^{th}$ vector of database (in fact: $j$) should be placed in $i^{th}$ hash table.
 The following equation describes implemented hash function.
 $N$ denotes Gaussian distribution and $U$ denotes random uniform distribution.
 \begin{equation*}
