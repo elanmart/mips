@@ -1,2 +1,273 @@
-[Write description of hierarchical k-means here.]
-Test of kmeans reference \cite{kmeans}
+A common approach for speeding up search of vector maximizing certain measure,
+such as inner product with a query vector, is preprocessing data vectors to
+quantize them to a smaller set of vectors. This technique assumes that vector
+will have similar value of target measure as its quantized representation.
+This is true for maximum inner product search, since two vectors,
+whose difference is $d$, cannot have bigger difference in inner product with
+query $q$ than $||d|| \cdot ||q||$.
+
+The speedup of this technique comes from the fact that set of quantized vectors
+can have smaller cardinality than set of original vectors. This leads to a 
+useful heuristic while searching: the original data vector maximizing 
+inner product with query is quantized to a representation that is similarly
+good in terms of the target value. It is thus possible to first multiply 
+query vector with all quantized vectors, select the one maximizing inner
+product, and then, for final answer, consider only vectors having this vector
+as its quantization.
+
+A simple, but effective way to quantize vectors is K-means clustering.
+The problem is to produce a set of K vectors, known as centroids, and assign 
+each data vector to one of them in such a way, that minimizes sum of squared
+distances of each vector to its centroid. In practice, the clusters (vectors
+assigned to the same centroid) have often relatively small radius (maximum
+distance between point in cluster to its centroid). That is a good property 
+for our problem, as it means inner product with query will be well approximated
+by $q \cdot c$, where $c$ is centroid vector.
+
+Finding K-means optimal solution is in general NP-hard, but there are efficient
+approximations for it. The most common and simple algorithm is known as 
+Lloyd's algorithm. It consists of two steps performed alternately a number of
+times. At each iteration, a set of centroids $C$ is maintained (randomly
+initialized at algorithm start). The first
+step of an iteration is assignment of each data vector to the centroid that
+is nearest to it. Then, in a second step, each centroid's value is updates
+to a new value, equal to arithmetic average of all vectors assigned to it.
+
+\begin{algorithm}[H]
+	\caption{K-means algorithm}
+	\begin{algorithmic}
+		\State $C \gets \text{K random vectors}$
+		\Repeat
+			\For{$ i = 0,\dots,N-1 $}
+				\State $A_i \gets argmin_{j} \ || x_i - C_j || $
+			\EndFor
+			\For{$ j = 0,\dots,K-1 $}
+				\State $C_j \gets mean(\{x_i\ |\ A_i = C_j\}) $
+			\EndFor
+		\Until {$ C \text{ stayed the same in this iteration} $}
+
+		\State \Return {$C,\ A$}
+	\end{algorithmic}
+\end{algorithm}
+
+In practice, we use a constant number of 25 outermost loop iterations
+instead of waiting for full convergence - further improvements are negligible.
+
+If straightforward implementation is used, each assignment step performs
+$O(N \cdot K)$ vector operations (where $N$ is number of data vectors and
+$K$ - number of centroids), and each clustering step - $O(K^2)$. Since
+$K \le N$, time complexity is determined by the assignment step. For a real
+world scenario with $N = 10^6$ and $K = 4000$, there is approximately
+$25 * 10^6 * 4000 = 10^{11}$ vector operations to be done - since vectors
+can have a couple hundred of components, that figure increases to roughly
+$10^{13}$ floating point operations. This takes considerable amount of time,
+but it is a one-time calculation - each query can then be answered without
+recalculating centroids.
+
+Query is answered by first calculating its inner product with each centroid,
+finding out which centroid maximizes it, then for every vector with whose
+quantization is that centroid, multiply it with query. Return the one
+with the biggest inner product. In essence, it is two exhaustive searches,
+first over set of centroids, then over set of its children.
+
+\begin{algorithm}[H]
+	\caption{K-means query}
+	\begin{algorithmic}
+		\State $B \gets -\infty$
+		\For{$ i < K $}
+			\State $IP \gets C_i \cdot q$
+			\If{$IP > B$}
+				\State $B \gets IP$
+				\State $c \gets i$
+			\EndIf
+		\EndFor
+		\State $B \gets -\infty$
+		\For{$ j \in \{ j\ |\ A_j = c \} $}
+			\State $IP \gets x_j \cdot q$
+			\If {$IP > B$}
+				\State $B \gets IP$
+				\State $r \gets j$
+			\EndIf
+		\EndFor
+		\State \Return $r$
+	\end{algorithmic}
+\end{algorithm}
+
+Time complexity of this algorithm is the sum of complexities of both loops.
+First, there are $O(K)$ vector multiplications to determine the best centroid,
+followed by $O(BF)$ inner products with its children\footnote{The second loop
+of the algorithm would have to perform $O(N)$ iterations if written naively.
+This can be prevented by remembering list of children for each centroid,
+reducing complexity to stated $O(BF)$}.
+$BF$ in this case denotes
+branching factor, defined as number of children of centroid. This is rarely
+constant, but can be approximated by average branching factor of all centroids,
+which is $O(\frac{N}{K})$, since every of $N$ data vectors has to be assigned
+to exactly one centroid. Total complexity is thus $O(K + \frac{N}{K})$. Since
+$K$ is parameter of this algorithm, it can be varied to measure efficiency. It
+can be expected that good results can be obtained for $K \approx \sqrt{N}$ 
+though, as this value minimizes expression $K + \frac{N}{K}$, for optimal
+complexity of $O(\sqrt(N) + \frac{N}{\sqrt{N}}) = O(\sqrt{N})$. Note that other
+values of $K$ result in different level of approximation though - there is
+a tradeoff between time and accuracy. 
+
+There is also a second way of improving accuracy at the cost of time - more
+than one centroid's children can be searched. This increases complexity of the
+second loop roughly $n$ times (where $n$ is number of selected centroids),
+but increases probability that returned vector is the correct one. Further
+analysis of this scenario will be done in following paragraphs, as part
+of description of hierarchical K-means, generalization of this algorithm.
+
+
+\bigskip
+
+
+The $O(\sqrt(N))$ time is a good improvement over full search, which would
+take $O(N)$ time. It can still be not enough for extremely large datasets
+though, especially if good level of approximation is needed. A hierarchical
+K-means scheme has been proposed as a further improvement.
+
+In this approach, data vectors are, like previously, using K-means algorithm.
+The difference is, that the resulting centroids are again clustered, forming
+a second layer of centroids. Querying is similar to the non-hierarchical
+approach too - best top-layer centroid is selected, then its best child and
+so on. This approach can be generalized to a higher number of layers $L$ 
+easily.
+
+
+\begin{algorithm}[H]
+	\caption{Hierarchical K-means clustering}
+	\begin{algorithmic}
+		\State $ Layers[0].vectors \gets x $
+		\For{$ i = 0,\dots,L $}
+			\State $ Layers[i].size \gets \left \lfloor N^{\frac{L + 1 - i}{L + 1}} \right \rfloor $
+			\State $ C,\ A \gets Kmeans(Layers[i - 1].vectors, Layers[i - 1].size) $
+			\State $ Layers[i].vectors \gets C $
+			\For {$ c = 0,\dots,Layers[i].size-1 $}
+				\State $ Layers[i].children[c] \gets \{ j\ |\ A[j] = c \} $
+			\EndFor
+		\EndFor
+		\State \Return {$ Layers $}
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[H]
+	\caption{Hierarchical K-means querying}
+	\begin{algorithmic}
+		\State $ S \gets [0..Layers[L].size] $
+		\For{$ i = L,\dots,0 $}
+			\State $ B \gets -\infty $
+			\For{$ s \in S $}
+				\State $ IP \gets q \cdot Layers[i].vectors[s] $
+				\If{$ IP > B $}
+					\State $ B \gets IP $
+					\State $ r \gets s $
+				\EndIf
+			\EndFor
+			\If{$ i = 0 $}
+				\State \Return {$ r $}
+			\EndIf
+			\State $ S \gets Layers[i].children[r] $
+		\EndFor
+	\end{algorithmic}
+\end{algorithm}
+
+The running time of this algorithm varies with number of layers. Assuming 
+ratio of consecutive layers' sizes is $ \sqrt[L+1]{N} $ (as in algorithm),
+then each of the $ L + 1 $ searches will have to perform approximately
+$ O(\sqrt[L+1]{N}) $ inner products, for a total complexity of
+$ O(\sqrt[L+1]{N} \cdot (L + 1)) $. That means, for example, for the same real-world
+values as previously ($ N=10^6 $) with two layers only approximately
+$ \sqrt[2+1]{10^6} \cdot (2 + 1) = 300 $ inner products are needed, as opposed
+to $ \sqrt{10^6} \cdot 2 = 2000 $ using a single layer like in flat K-means.
+Potential time gains are even bigger for 3 or 4 centroid layers\footnote{
+There is a theoretical limit for improvement - at point where increasing
+number of layers leads to slower search because of the multiplicative $L+1$ factor.
+This limit is in practice large enough that accuracy degradation is too 
+significant for this number of layers to be feasible anyway. 
+For $N=10^6$, theoretical limit is $15$ layers, corresponding to average 
+of $2.5$ children per centroid, i.e. almost binary tree.
+}. There is a problem however - there are only a few top-layer clusters, 
+meaning they have many last-layer eventual descendants. That causes the
+original algorithm assumption of centroids being close to points they represent
+to become weaker. This leads to decrease in accuracy with increasing layer
+count.
+
+One way to counter it is to, again, consider $n$ best children instead of
+just one. This would increase time complexity to 
+$ O(\sqrt[L+1]{N} \cdot (L \cdot n + 1)) $, as all layers except of the top one
+will have on average $n$ times more candidates to check.
+
+When checking more than one centroid at each layer, the optimal (in terms
+of inner products performed) sizes of clusters change. Let $ K_L $ denote
+numer of centroids in the top layer, $ K_{L-1} $ the one below, up to
+$ K_1 $ meaning number of centroids in bottom layer, and $ K_0 $, by 
+convention, meaning number of data vectors (equal $N$). Total number of
+products calculated is equal to 
+$$ P = K_L + \sum_{i=0}^{L-1} \frac{K_i}{K_{i+1}} \cdot n $$
+In the optimal choice of $K_i$ values, partial derivatives of this expression
+with respect to $K_i$ should all be equal 0. The equation for the top layer 
+derivative is a special case, as it has extra component before the sum:
+$$ 
+\frac{\partial P}{\partial K_L} = 
+\frac{\partial (K_L + \frac{K_{L-1}}{K_L} \cdot n)}{\partial K_L} =
+1 -\frac{n \cdot K_{L-1}}{K_L^2} = 
+0
+$$
+$$
+1 = \frac{n \cdot K_{L-1}}{K_L^2}
+$$
+$$
+\frac{K_L}{n} = \frac{K_{L-1}}{K_L}
+$$
+The remaining derivatives follow another equations:
+$$
+\frac{\partial P}{\partial K_i} =
+\frac{\partial (\frac{K_i}{K_{i+1}} + \frac{K_{i-1}}{K_i}) \cdot n}{\partial K_i} =
+\frac{n}{K_{i+1}} - \frac{n \cdot K_{i-1}}{K_i^2} = 0
+$$
+$$
+\frac{n}{K_{i+1}} = \frac{n \cdot K_{i-1}}{K_i^2}
+$$
+$$
+\frac{K_i}{K_{i+1}} = \frac{K_{i-1}}{K_i}
+$$
+
+We can now see that ratios of consecutive cluster sizes is constant - in other
+words, they form a geometric progression. The first term in the sequence,
+$K_0$ is known to be equal to number of data vectors, $N$. From equation
+for derivative of $K_L$, last - $(L+1)^{th}$ - term is known to be $n$. From this,
+the common ration is calculated to be $\sqrt[L+1]{n}$. The general formula
+for number of centroids on $i^{th}$ of $L$ layers minimizing total number of
+inner products is hence:
+$$
+K_i = N^{\frac{L+1-i}{L+1}} \cdot n^\frac{i}{L+1}
+$$
+
+For $N = 10^6$, $L = 2$ and $n = 100$, this modified equations gives cluster sizes:
+$$ K_1 = (10^6)^{\frac{2}{3}} \cdot 100^\frac{1}{3} \approx 46416 $$
+$$ K_2 = (10^6)^{\frac{1}{3}} \cdot 100^\frac{2}{3} \approx 2154 $$
+The number of inner products is thus:
+$$ 
+P = K_2 + \frac{K_1}{K_2} \cdot n + \frac{N}{K_1} \cdot n =
+2154 + \frac{46416}{2154} \cdot 100 + \frac{10^6}{46416} \cdot 100 \approx
+6463
+$$
+
+In original form unadjusted for increased number of considered centroids,
+the numbers would be:
+$$ K_1 = (10^6)^{\frac{2}{3}} = 10000 $$
+$$ K_2 = (10^6)^{\frac{1}{3}} = 100 $$
+$$ 
+P = K_2 + \frac{K_1}{K_2} \cdot n + \frac{N}{K_1} \cdot n =
+100 + \frac{10000}{100} \cdot 100 + \frac{10^6}{10000} \cdot 100 =
+20100
+$$
+
+A roughly threefold improvement can be seen by using the theoretical optima.
+This does not mean though that the accuracy stays the same - it is possible
+for the increased cluster sizes to cause points be assigned to centroids
+further away, worsening the approximation. In either case, the centroids can
+be trained using optimal values for some value of $n$, but then be queried
+with another parameter $n$ value. Careful choosing these two parameters -
+$n_{train}$ and $n_{query}$ may lead to satisfying accuracy at shorter time.
