@@ -1,29 +1,29 @@
-The aim of this thesis is to describe a library for fast, approximate \texttt{Maximum Inner Product Search}, 
+The aim of this thesis is to describe a library for fast, approximate \textit{Maximum Inner Product Search},
 which we created as part of our dissertation. 
 
 The goal of this work was to provide a set of tools that would help machine learning developers and practitioners create faster, 
 more scalable machine learning models.
 
 To this end we focused on problems, where prediction times are of larger importance than training times, and where prediction can be 
-cast as a \texttt{Nearest Neighbours Search}, with inner product given as a similarity metric. Additionally, we focus 
+cast as a \textit{Nearest Neighbours Search}, with inner product given as a similarity metric. Additionally, we focus
 on models where a linear search time becomes prohibitively expensive, for example when one has to query against hundreds of thousands of vectors.
 
 Such problems naturally arise in many machine learning models, for example in classification problem with large output spaces, 
-when a linear models or deep neural networks are used. In these cases, one usually wants to retrieve only \texttt{top-k} best scores, with values 
-of \texttt{k} typically ranging from $5$ to $100$.
+when a linear models or deep neural networks are used. In these cases, one usually wants to retrieve only top-$k$ best scores, with values
+of $k$ typically ranging from $5$ to $100$.
 
-The library we built aims to deliver algorithms designed to do exactly that -- efficiently retrieve a set of \texttt{k} (approximate) results. 
+The library we built aims to deliver algorithms designed to do exactly that -- efficiently retrieve a set of $k$ (approximate) results.
 
 Additionally, we wanted our algorithms to not only deliver high performance, but also to be easy-to-use. We therefore 
 focused on providing a set of wrappers around a range of machine learning libraries, that allow users to 
-speed up their models without ever touching any of our approximation algorithms. These wrappers can therefore be used as drop-in replacements for a number of models in python machine learning ecosystem.
+speed up their models without ever touching any of our approximation algorithms. Consequently, these wrappers can be used as drop-in replacements for a number of models in Python machine learning ecosystem.
 
 We provide a set of examples of how this library can be used in practice, as well detailed experiments measuring the speed and 
 accuracy of our algorithms.
 
 The rest of this thesis is structured as follows: (\texttt{TODO})
-
 \begin{itemize}
+    \setlength\itemsep{1pt}
     \item Problem Description
     \item Algorithms Description
     \item Implementation Description
