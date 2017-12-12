@@ -1,0 +1,75 @@
+MIPS problem is closely related to MCSS and NNS - Maximum Cosine
+Similarity Search and Nearest Neighbour Search, respectively.
+MIPS' goal is to find vector maximizing inner product with query,
+MCSS' - to maximize cosine similarity with query (or equivalently,
+minimize angle between chosen vector and query), and NNS - to find
+the vector minimizing distance to query. All three problems are
+equivalent if all vectors are unit - in general they are not, of course.
+There are a couple of known ways
+of transforming data and query vectors such that MIPS on original ones
+is equivalent to MCSS or NNS in the transformed space. We compare two different
+transformations, first proposed by Shrivastava and Li, the second - by
+Neyshabur and Srebro.
+
+Shrivastava approach has two parameters: $m$ and $0 < U < 1$. All queries
+are first normalized, and all vectors divided by the same number such that
+their norm is smaller than $U$. Neither of these changes
+$argmin_i\ x_i \cdot q$. Then, these transformations are applied to data
+and query vectors\footnote{In other papers, the $\frac{1}{2}$ fractions are
+instead moved to $x'$, for example $\frac{1}{2} - ||x||^2$, leaving extra
+query components equal to 0. This does not change the analysis though.}:
+$$
+x' = [x, ||x||^2, ||x||^4, \cdots, ||x||^{2^m}]
+$$
+$$
+q' = [q, \frac{1}{2}, \frac{1}{2}, \dots, \frac{1}{2}]
+$$
+Both transformations extend vectors by $m$ positions. It can be shown that
+solution to NNS problem in this space is the same as solution to original
+MIPS problem, as long as $m$ is sufficiently large:
+$$
+||x' - q'||^2 = ||x - q||^2 +
+(||x||^2 - \frac{1}{2})^2 + (||x||^4 - \frac{1}{2})^2 + \dots + 
+(||x||^{2^m} - \frac{1}{2})^2 =
+$$
+$$
+||x||^2 + ||q||^2 - 2 q \cdot x
++ ||x||^{2^{m+1}} + \frac{m}{4} - ||x||^2 =
+$$
+$$
+1 + \frac{m}{4} - 2 q \cdot x + ||x||^{2^{m+1}}
+$$
+
+$ 1 + \frac{m}{4} $ is a constant, so it does not matter for determining 
+which vector minimizes the $x'$ to $q'$ distance. The last term, 
+$||x||^{2^{m+1}}$ quickly vanishes as $m \to \infty$, so it can be skipped
+as an approximation. Shrivastava suggests using $m \ge 3$ for good results.
+This leaves just $ - 2 q \cdot x $ term, which is, up to a multiplicative
+constant, metric optimized in MIPS.
+Thus:
+$$
+argmax_i\ x_i \cdot q \simeq argmin_i\ ||x' - q'||
+$$
+
+Neyshabur simplifies the augmentation significantly. Here, queries are also
+normalized, and vectors scaled such that they are within unit sphere. The
+transformation is then:
+$$
+x' = [x, \sqrt{1 - ||x||^2}]
+$$
+$$
+q' = [q, 0]
+$$
+The inner product of modified vectors is $x' \cdot q' = x \cdot q$, i.e. equal
+to the original inner product. MIPS on transformed vectors has thus the same
+solution as MIPS on original ones. There is however a useful property of this
+augmentation: it makes all vectors' norms equal to one: 
+$$ ||q'|| = ||q|| = 1 $$
+$$ ||x'||^2 = ||x||^2 + \sqrt{1 - ||x||^2}^2 = ||x||^2 + 1 - ||x||^2 = 1 $$
+That means new MIPS problem is equivalent to MCSS and NNS in the transformed
+space.
+
+Hierarchical K-means and ALSH approximations for MIPS problem may use one
+of these two augmentations to improve the results. In our implementation,
+algorithms are parametrized by the type of transformation used: Shrivastava,
+Neyshabur, or no transformation as a baseline.
