@@ -26,8 +26,7 @@ class LinearClassifierMixin(ClassifierMixin):
             raise ValueError("X has %d features per sample; expecting %d"
                              % (X.shape[1], n_features))
 
-        scores = safe_sparse_dot(X, self.coef_.T,
-                                 dense_output=True) + self.intercept_
+        scores = _default_index.search()
         return scores.ravel() if scores.shape[1] == 1 else scores
 
     def predict(self, X):
@@ -53,7 +52,7 @@ class LinearClassifierMixin(ClassifierMixin):
             prob /= prob.sum(axis=1).reshape((prob.shape[0], -1))
             return prob
 
-    def train_internal_index():
+    def train_external_index(self, mode):
         super().train(mode)
         
         if (mode is False) and self.train_on_eval:
