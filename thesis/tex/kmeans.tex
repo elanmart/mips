@@ -4,7 +4,8 @@ quantize them to a smaller set of vectors. This technique assumes that vector
 will have similar value of target measure as its quantized representation.
 This is true for maximum inner product search, since two vectors,
 whose difference is $d$, cannot have bigger difference in inner product with
-query $q$ than $||d|| \cdot ||q||$.
+query $q$ than $||d|| \cdot ||q||$. Similar argument can be made for NNS,
+where difference in distance to query will not exceed $d$.
 
 The speedup of this technique comes from the fact that set of quantized vectors
 can have smaller cardinality than set of original vectors. This leads to a 
@@ -31,7 +32,13 @@ times. At each iteration, a set of centroids $C$ is maintained (randomly
 initialized at algorithm start). The first
 step of an iteration is assignment of each data vector to the centroid that
 is nearest to it. Then, in a second step, each centroid's value is updated
-to a new value, equal to arithmetic average of all vectors assigned to it.
+to a new value, equal to arithmetic average of all vectors assigned to
+it\footnote{
+In case of MCSS, a modified algorithm called spherical $K$-means can be used.
+It is essentially the same, with the only difference being additional
+centroid normalization after each update. This is because MCSS
+takes into account only vector direction, not the magnitude.
+}.
 
 \begin{algorithm}[H]
 	\caption{$K$-means algorithm}
@@ -58,15 +65,15 @@ $O(N \cdot K)$ vector operations (where $N$ is number of data vectors and
 $K$ -- number of centroids), and each clustering step -- $O(K^2)$. Since
 $K \le N$, time complexity is determined by the assignment step. For a real
 world scenario with $N = 10^6$ and $K = 4000$, there is approximately
-$25 * 10^6 * 4000 = 10^{11}$ vector operations to be done -- since vectors
+$25 \cdot 10^6 \cdot 4000 = 10^{11}$ vector operations to be done -- since vectors
 can have a couple hundred of components, that figure increases to roughly
 $10^{13}$ floating point operations. This takes considerable amount of time,
 but it is a one-time calculation -- each query can then be answered without
 recalculating centroids.
 
 Query is answered by first calculating its inner product with each centroid,
-finding out which centroid maximizes it, then for every vector with whose
-quantization is that centroid, multiply it with query. Return the one
+finding out which centroid maximizes it, then multiply query with each vector
+whose quantization is that centroid. Return the one
 with the biggest inner product. In essence, it is two exhaustive searches,
 first over set of centroids, then over set of its children.
 
@@ -105,7 +112,7 @@ constant, but can be approximated by average branching factor of all centroids,
 which is $O(\frac{N}{K})$, since every of $N$ data vectors has to be assigned
 to exactly one centroid. Total complexity is thus $O(K + \frac{N}{K})$. Since
 $K$ is parameter of this algorithm, it can be varied to measure efficiency. It
-can be expected that good results can be obtained for $K \approx \sqrt{N}$ 
+can be expected that good results should be obtained for $K \approx \sqrt{N}$ 
 though, as this value minimizes expression $K + \frac{N}{K}$, for optimal
 complexity of $O(\sqrt(N) + \frac{N}{\sqrt{N}}) = O(\sqrt{N})$. However, note that other
 values of $K$ result in different level of approximation -- there is
