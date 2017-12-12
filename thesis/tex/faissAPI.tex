@@ -5,11 +5,11 @@
     \subsubsection{Dependencies}
     
         Our library contains a number of dependencies. Most importantly, the core components rely on 
-        another library for \textit{Approximate Similarity Search}, Faiss (\url{https://github.com/facebookresearch/faiss}).
+        another library for \textit{Approximate Similarity Search}, Faiss \cite{faiss}.
         Faiss in turn depends on Basic Linear Algebra Subprograms (BLAS) being available.
         
         Additionally, the Python parts of our code rely on several components: \texttt{pybind11} and \texttt{swig}
-        for bindings generation, standard data-science tools like pandas for data analysis, and naturally, on the
+        for bindings generation, standard data-science tools like \texttt{pandas} for data analysis, and naturally, on the
         libraries that we create wrappers for. For more details we refer the reader to the \hyperref[sec:appendices]{appendix}.
     
     \subsubsection{Build System}

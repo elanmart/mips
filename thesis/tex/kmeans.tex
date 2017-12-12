@@ -132,7 +132,7 @@ of description of hierarchical $K$-means, generalization of this algorithm.
 The $O(\sqrt{N})$ time is a good improvement over full search, which would
 take $O(N)$ time. It can still be not enough for extremely large datasets
 though, especially if good level of approximation is needed. A hierarchical
-$K$-means scheme has been proposed as a further improvement.
+$K$-means scheme has been proposed as a further improvement \cite{kmeans}.
 
 In this approach, data vectors are quantized, like previously,
 using $K$-means algorithm.
@@ -275,7 +275,7 @@ $$
 A roughly threefold improvement can be seen by using the theoretical optima.
 This does not mean though that the accuracy stays the same -- it is possible
 for the change in cluster sizes to create worse quantization. Another
-possible effect can be seen when more than one best vector is required -
+possible effect can be seen when more than one best vector is required --
 in our benchmarks, top-100 candidates are returned. Smaller clusters near
 the bottom layer mean that for constant $n$ parameter, smaller number of
 data vectors will be searched.

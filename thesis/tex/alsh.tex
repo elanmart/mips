@@ -1,20 +1,16 @@
-The Asymmetric Locality Sensitive Hashing (ALSH) \cite{alsh} algorithm builds an index based on hash tables.
-First, one should divide all database vectors' components by the maximum norm of any vector.
-This divisor can optionally be multiplied by $U \in [0,1]$.
-After such scaling $m$ components in the form of $|x_i|^2$, $|x_i|^4$, $|x_i|^8$, $ ...$, $|x_i|^{2^m}$ should be added at the end of each vector $x_i$.
-\par
-The index consists of $L$ hash tables.
+The Asymmetric Locality Sensitive Hashing (ALSH) \cite{alsh} algorithm builds an index based on $L$ hash tables.
+Before hashing, vectors may be augmented using one of approaches presented in the beginning of this section, e.g. Shivastrava's or Neyshabur's transformation.
 In order to create $i^{th}$ table it is necessary to hash database vectors using $K$ hash functions: $h_{1,i}, h_{2,i}, ..., h_{K,i}$.
-The results of hashing of vector $x_j$ will create another vector $H_{i,j} = [h_{1,i}(x_j), h_{2,i}(x_j), ..., h_{K,i}(x_j)]$. $H_{i,j}$ is the key where the number of $j^{th}$ vector of database (in fact: $j$) should be placed in $i^{th}$ hash table.
+The results of hashing of vector $x_j$ will create another vector $H_{i,j} = [h_{1,i}(x_j), h_{2,i}(x_j), ..., h_{K,i}(x_j)]$. $H_{i,j}$ is the key where index of $j^{th}$ vector of database should be placed in $i^{th}$ hash table.
 The following equation describes implemented hash function.
 $N$ denotes Gaussian distribution and $U$ denotes random uniform distribution.
 \begin{equation*}
 h_{i,j}(\bm{x}) = \floor*{\frac{\bm{a_{i,j}^T x} + b_{i,j}}{r}}, \bm{a_{i,j}} \sim N(0,1), b_{i,j} \sim U(0,r)
 \end{equation*}
 \par
-Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole algorithm, also in the querying phase. The algorithm has a total of 5 parameters: $m$, $U$, $L$, $K$ and $r$.
+Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole algorithm, also in the querying phase.
+Parameters specific to this algorithm are $L$, $K$ and $r$.
 Preparation of $L = 2$ hash tables for a database having 4 vectors: $x_1, x_2, x_3$ and $x_4$ is presented below.
-\\
 Computations of vectors' keys in first table:\\
 $H_{1,1} = [h_{1,1}(x_1), h_{2,1}(x_1), h_{3,1}(x_1)] = [0, 1, 0]$\\
 $H_{1,2} = [h_{1,1}(x_2), h_{2,1}(x_2), h_{3,1}(x_2)] = [-1, 1, 0]$\\
@@ -50,9 +46,8 @@ $[1, 0, -1]$ & $\{4\}$ \\
 \hline
 \end{tabular}
 \end{center}
-Searching the index with query $q$ requires an earlier preparation of said query.
-$m$ components equal to $\frac{1}{2}$ should be added at the end of $q$.
-Then the query is hashed in a similar manner to database vectors -- in each table it is hashed $K$ times with corresponding functions.
+Searching the index with query $q$ can be preceded by earlier transformation of said query -- just like vectors' transformations.
+The query is then hashed in a similar manner to database vectors -- in each table it is hashed $K$ times with corresponding functions.
 An example process of hashing the query is given below.\\
 $H_{1,q} = [h_{1,1}(q), h_{2,1}(q), h_{3,1}(q)] = [0, 1, 0]$\\
 $H_{2,q} = [h_{1,2}(q), h_{2,2}(q), h_{3,2}(q)] = [1, 0, -1]$
@@ -60,9 +55,9 @@ $H_{2,q} = [h_{1,2}(q), h_{2,2}(q), h_{3,2}(q)] = [1, 0, -1]$
 $H_{1,q}$ i $H_{2,q}$ are the keys with which one should look for vectors in first and second hash table respectively.
 Found vectors are supposed to show similarity to $q$.
 \par
-$x_1$ and $x_4$ turned out to be similar to $q$ according to first table, but only $x_4$ appears to be similar to query according to second table.
-In real-world scenarios, a ranking of vectors is made that is sorted by number of tables in which a collision between query and vector occurred.
-Ultimately, $x_4$ is the most similar vector to query, because the collision happened in both tables.
+In the example, $x_1$ and $x_4$ turned out to be similar to $q$ according to first table, but only $x_4$ appears to be similar to query according to second table.
+Vectors that collided with query are potential candidates for being returned as one of top-$k$ most similar vectors.
+Exhaustive inner product search can be performed on them, and thanks to that we will discover actual best vectors taken from candidate set.
 \par
-It is possible to augment (append additional components at the end) the vectors in different ways or there can be no augmentation at all.
-Another way the vectors can be modified is to append further $m$ scalars equal to $\frac{1}{2}$ to vectors, and $m$ scalars $|q|^2$, $|q|^4$, $|q|^8$, $...$, $|q|^{2^m}$ to query.
+Another idea is to create a ranking of vectors which is sorted by number of tables in which a collision between query and vector occurred, although this seems computationally expensive.
+If this idea is used, $x_4$ is the most similar vector to query, because the collision happened in both tables.
