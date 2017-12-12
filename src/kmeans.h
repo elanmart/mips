@@ -22,6 +22,8 @@ struct IndexHierarchicKmeans: public faiss::Index {
     void save(const char* fname) const;
     void load(const char* fname);
 
+    void set_opened_trees(size_t val) { this->opened_trees = val; }
+
     FloatMatrix vectors_original;
     std::vector<layer_t> layers;
 
