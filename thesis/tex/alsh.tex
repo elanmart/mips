@@ -1,17 +1,46 @@
-The Asymmetric Locality Sensitive Hashing (ALSH) \cite{alsh} algorithm builds an index based on $L$ hash tables.
-Before hashing, vectors may be augmented using one of approaches presented in the beginning of this section, e.g. Shivastrava's or Neyshabur's transformation.
-In order to create $i^{th}$ table it is necessary to hash database vectors using $K$ hash functions: $h_{1,i}, h_{2,i}, ..., h_{K,i}$.
-The results of hashing of vector $x_j$ will create another vector $H_{i,j} = [h_{1,i}(x_j), h_{2,i}(x_j), ..., h_{K,i}(x_j)]$. $H_{i,j}$ is the key where index of $j^{th}$ vector of database should be placed in $i^{th}$ hash table.
-The following equation describes implemented hash function.
+The Asymmetric Locality Sensitive Hashing (ALSH) \cite{alsh} algorithm depends on hash functions
+in order to determine similarities between vectors themselves and between vectors and queries.
+Hash function transforms its possibly long input such as file (or vector of numbers like in our case)
+into much smaller domain of output values.
+A collision happens when two different inputs cause the function to return the same output.
+In this algorithm's case it is a desired property for vectors to collide if they are in some way similar to each other.
+\par
+Single function may not be able to distingiush similarities among all vectors correctly i.e. some
+significantly differing vectors might collide. Because of that $K$ functions grouped into
+meta-hash function are used in this approach. Each function detects similarities of various aspects of vectors.
+As these functions are partially random, aspects they will represent are not deterministic.
+After a vector is hashed by all $K$ functions, outputs taken together form a hash table key.
+An entry in hash table consists of key pointing to a set of vector indices for which the meta-hash function
+returned this exact key. In other words, vectors are placed in ,,buckets'' --
+every bucket represents one value of meta-hash.
+To allow even higher abstraction level, $L$ meta-hash functions can be used to create $L$ hash tables --
+vectors will be placed in $L$ sets of buckets according to some rules depending on applied meta-hash function.
+Before hashing, vectors can be augmented using one of approaches presented in the beginning
+of this section, e.g. Shrivastrava's or Neyshabur's transformation.
+\par
+Searching the index with query can as well be preceded by its earlier transformation.
+Detecting which database vectors are most similar to query, relies on checking with which
+vectors the query collided after being hashed using exactly the same meta-hash functions.
+Speaking the bucket metaphor: in each bucket set we try to fit the query to some bucket and when
+we succeed, this bucket contains vectors we are interested in.
+Vectors' indices acquired this way are collected from every hash table and form candidate set from which top-$k$
+most similar vectors should be chosen. In order to do that, exhaustive search can be performed.
+Another idea is to create a ranking sorted by number of tables in which a collision
+between query and vector occurred, although this seems computationally expensive.
+\par
+In the $i^{th}$ hash table the meta-hash function contains $K$ functions: $h_{1,i},$ $h_{2,i},$ $...,$ $h_{K,i}$.
+By hashing the vector $x_j$ we will get the key $H_{i,j} = $ $[h_{1,i}(x_j),$ $h_{2,i}(x_j),$
+$..., h_{K,i}(x_j)]$ under which the index of $j^{th}$ vector of database should be
+placed in $i^{th}$ hash table. The following equation describes implemented hash function.
 $N$ denotes Gaussian distribution and $U$ denotes random uniform distribution.
 \begin{equation*}
 h_{i,j}(\bm{x}) = \floor*{\frac{\bm{a_{i,j}^T x} + b_{i,j}}{r}}, \bm{a_{i,j}} \sim N(0,1), b_{i,j} \sim U(0,r)
 \end{equation*}
 \par
-Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole algorithm, also in the querying phase.
-Parameters specific to this algorithm are $L$, $K$ and $r$.
-Preparation of $L = 2$ hash tables for a database having 4 vectors: $x_1, x_2, x_3$ and $x_4$ is presented below.
-Computations of vectors' keys in first table:\\
+Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole
+algorithm, also in the querying phase. Parameters specific to this algorithm are $L$, $K$ and $r$.
+Preparation of $L = 2$ hash tables for a database having 4 vectors:
+$x_1, x_2, x_3$ and $x_4$ is presented below. Computations of vectors' keys in first table:\\
 $H_{1,1} = [h_{1,1}(x_1), h_{2,1}(x_1), h_{3,1}(x_1)] = [0, 1, 0]$\\
 $H_{1,2} = [h_{1,1}(x_2), h_{2,1}(x_2), h_{3,1}(x_2)] = [-1, 1, 0]$\\
 $H_{1,3} = [h_{1,1}(x_3), h_{2,1}(x_3), h_{3,1}(x_3)] = [1, 0, -1]$\\
@@ -46,18 +75,11 @@ $[1, 0, -1]$ & $\{4\}$ \\
 \hline
 \end{tabular}
 \end{center}
-Searching the index with query $q$ can be preceded by earlier transformation of said query -- just like vectors' transformations.
-The query is then hashed in a similar manner to database vectors -- in each table it is hashed $K$ times with corresponding functions.
+
 An example process of hashing the query is given below.\\
 $H_{1,q} = [h_{1,1}(q), h_{2,1}(q), h_{3,1}(q)] = [0, 1, 0]$\\
 $H_{2,q} = [h_{1,2}(q), h_{2,2}(q), h_{3,2}(q)] = [1, 0, -1]$
 
 $H_{1,q}$ i $H_{2,q}$ are the keys with which one should look for vectors in first and second hash table respectively.
-Found vectors are supposed to show similarity to $q$.
-\par
 In the example, $x_1$ and $x_4$ turned out to be similar to $q$ according to first table, but only $x_4$ appears to be similar to query according to second table.
-Vectors that collided with query are potential candidates for being returned as one of top-$k$ most similar vectors.
-Exhaustive inner product search can be performed on them, and thanks to that we will discover actual best vectors taken from candidate set.
-\par
-Another idea is to create a ranking of vectors which is sorted by number of tables in which a collision between query and vector occurred, although this seems computationally expensive.
-If this idea is used, $x_4$ is the most similar vector to query, because the collision happened in both tables.
+If the collision ranking idea is used, $x_4$ is the most similar vector to query, because the collision happened in both tables.
