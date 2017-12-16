@@ -1,5 +1,6 @@
 import sys
 import os
+import numbers
 sys.path.append(os.path.abspath('/home/aga/Pulpit/mips/faiss/'))
 
 import sklearn as sk
@@ -10,10 +11,12 @@ from scipy import sparse
 from sklearn.base import BaseEstimator
 from sklearn.base import ClassifierMixin
 from sklearn.linear_model.base import SparseCoefMixin
-#import faiss
-
+from sklearn.utils import check_X_y
+from sklearn.utils.multiclass import check_classification_targets
+from sklearn.linear_model.logistic import _check_solver_option, _fit_liblinear
+import faiss
 class LinearClassifierMixin(ClassifierMixin):
-
+        
     def decision_function(self, X):
         if not hasattr(self, 'coef_') or self.coef_ is None:
             raise NotFittedError("This %(name)s instance is not fitted "
@@ -26,7 +29,7 @@ class LinearClassifierMixin(ClassifierMixin):
             raise ValueError("X has %d features per sample; expecting %d"
                              % (X.shape[1], n_features))
 
-        scores = _default_index.search()
+        scores = self.index.search(X)
         return scores.ravel() if scores.shape[1] == 1 else scores
 
     def predict(self, X):
@@ -52,24 +55,17 @@ class LinearClassifierMixin(ClassifierMixin):
             prob /= prob.sum(axis=1).reshape((prob.shape[0], -1))
             return prob
 
-    def train_external_index(self, mode):
-        super().train(mode)
-        
-        if (mode is False) and self.train_on_eval:
-            w = self._as_np(self.weight)
-            self.index.train(w)
-            self.index.add(w)
-            
+    def train_internal_index(self):
+        w = self.coef_
+        self.index.train(w)
+        self.index.add(w)            
         return self
 
-    def _default_index(self, d):
-        index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
-        index.nprobe = 256        
-        return index
+
 class LogisticRegression(BaseEstimator, LinearClassifierMixin,
                          SparseCoefMixin):
 
-    def __init__(self, penalty='l2', dual=False, tol=1e-4, C=1.0,
+    def __init__(self,d, penalty='l2', dual=False, tol=1e-4, C=1.0,
                  fit_intercept=True, intercept_scaling=1, class_weight=None,
                  random_state=None, solver='liblinear', max_iter=100,
                  multi_class='ovr', verbose=0, warm_start=False, n_jobs=1):
@@ -88,6 +84,7 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         self.verbose = verbose
         self.warm_start = warm_start
         self.n_jobs = n_jobs
+        self.index = self._default_index(d)
 
     def fit(self, X, y, sample_weight=None):
         
@@ -197,7 +194,6 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         if self.fit_intercept:
             self.intercept_ = self.coef_[:, -1]
             self.coef_ = self.coef_[:, :-1]
-
         return self
 
     def predict_proba(self, X):
@@ -212,5 +208,9 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
 
     def predict_log_proba(self, X):
         return np.log(self.predict_proba(X))
+    def _default_index(self, d):
+        index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
+        index.nprobe = 256        
+        return index
 
 
