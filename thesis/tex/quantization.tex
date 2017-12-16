@@ -1,16 +1,29 @@
-The first step in quantization-based inner product search algorithm \cite{quantization} is to permute all database vectors.
-Permutation should be fixed (the same for all vectors \textit{and} queries) and random.
-Next, each vector should be mapped into $K$ subspaces, i.e. divided into $K$ parts with equal number of components.
-We have set $P_i$ of $i^{th}$ parts of all vectors in database.
+The quantization-based inner product search algorithm \cite{quantization}
+looks for similarities at the level of vectors' parts -- unlike two other algorithms
+described in this thesis which do this by considering vectors as whole.
+These parts are not vectors simply cut into pieces but they are produced in a slightly random way
+ -- all vectors and queries are permuted (the order of vectors' components changes) randomly.
+This permutation is fixed (the same for all vectors \textit{and} queries).
+Each vector should be then mapped into $K$ subspaces, i.e. divided into $K$ parts with equal number of components.
+Let us denote the set of $i^{th}$ parts of all vectors in database by $P_i$.
 For each set $P_i$, $k$-means procedure is performed giving $k$ centroids $C_{i,j}$ and assignments of parts in $P_i$ to these centroids.
+It means that vectors are quantized at the level of parts and whole vector is represented as
+approximations of its parts.
 \par
-To search the index with query $q$ it is necessary to permute it using the same fixed permutation as for database vectors.
-After that, a table $T$ having $K$ columns and $k$ rows is created.
-Table entry $T_{i,j}$ is a dot product between $i^{th}$ part of query and $j^{th}$ centroid assigned to set $P_i$.
-Query's inner product with vector $x_l$ can be approximated as $$\sum_{i=1}^{K} T_{i,c_{i,l}}$$
-where $c_{i,l}$ is the centroid assigned to vector $l$ in part $i$. Having computed these approximations vectors can be sorted according to them and the algorithm will return indices of some number (e.g. 100) of best vectors.
+The score of vector (how similar it is to query) is computed as sum of inner products
+between query's parts and centroids assigned to respective parts of vector.
+Naive approach would compute these inner products seperately for each vector.
+As many vectors' parts are approximated by the same centroids, it is enough to compute
+these products once and use them when needed.
+Because of that a table $T$ having $K$ columns and $k$ rows has to be created.
+Table entry $T_{i,j}$ is a dot product between $i^{th}$ part of query $q$ ($q_i$) and $j^{th}$
+centroid assigned to set $P_i$ ($C_{i,j}$).
+Inner product approximation for vector $x_l$ is then
+$$\sum_{i=1}^{K} T_{i,c_{i,l}}$$ where $c_{i,l}$ is the centroid assigned to $x_l$ in part $i$.
+In the end certain number of vector with highest approximations is reported.
+
 \par
-Consider set of $n = 5$ vectors already divided into $K = 4$ parts:
+Consider database of $n = 5$ vectors already divided into $K = 4$ parts:
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{c|c|c|c|c|}
@@ -56,7 +69,7 @@ After dividing query into parts $q_1, q_2, \ldots, q_K$ the pre-computed table $
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|}
 \hline
-$ q_1^T C_{1,1} $ & $ q_2^T C_{1,2} $ & $ q_3^T C_{1,3} $ & $ q_4^T C_{1,4} $ \\
+$ q_1^T C_{1,1} $ & $ q_2^T C_{1,2} $ & $ q_3^T C_{1,3} $ & $ q_4^T C_{1,4} $\\
 \hline
 $ q_1^T C_{2,1} $ & $ q_2^T C_{2,2} $ & $ q_3^T C_{2,3} $ & $ q_4^T C_{2,4} $\\
 \hline
@@ -66,8 +79,13 @@ $ q_1^T C_{2,1} $ & $ q_2^T C_{2,2} $ & $ q_3^T C_{2,3} $ & $ q_4^T C_{2,4} $\\
 \smallskip
 
 Based on table $T$ is it easy to compute inner product approximations, e.g.:
-\[ q^T x_3 \approx q_1^T C_{2,1} + q_2^T C_{2,2} + q_3^T C_{2,3} + q_4^T C_{1,4} \]
-\[ q^T x_5 \approx q_1^T C_{1,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{2,4} \]
+\begin{gather*}
+ q^T x_1 \approx q_1^T C_{2,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{1,4} = T_{1,2} + T_{2,1} + T_{3,2} + T_{4,1} \\
+ q^T x_2 \approx q_1^T C_{1,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{1,4} = T_{1,1} + T_{2,1} + T_{3,2} + T_{4,1} \\
+ q^T x_3 \approx q_1^T C_{2,1} + q_2^T C_{2,2} + q_3^T C_{2,3} + q_4^T C_{1,4} = T_{1,2} + T_{2,2} + T_{3,2} + T_{4,1} \\
+ q^T x_4 \approx q_1^T C_{1,1} + q_2^T C_{2,2} + q_3^T C_{1,3} + q_4^T C_{2,4} = T_{1,1} + T_{2,2} + T_{3,1} + T_{4,2} \\
+ q^T x_5 \approx q_1^T C_{1,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{2,4} = T_{1,1} + T_{2,1} + T_{3,2} + T_{4,2}
+\end{gather*}
 
 The squared error arising from clustering can be expressed this way:
 $$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, c_{i,l}} - p_{l,i})]^2, l = 1, 2, \ldots, n$$

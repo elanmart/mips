@@ -12,7 +12,8 @@ As these functions are partially random, aspects they will represent are not det
 After a vector is hashed by all $K$ functions, outputs taken together form a hash table key.
 An entry in hash table consists of key pointing to a set of vector indices for which the meta-hash function
 returned this exact key. In other words, vectors are placed in ,,buckets'' --
-every bucket represents one value of meta-hash.
+every bucket represents one value of meta-hash and consequently contains similar vectors, where
+similarity is more precisely evaluated than one single hash function would evaluate.
 To allow even higher abstraction level, $L$ meta-hash functions can be used to create $L$ hash tables --
 vectors will be placed in $L$ sets of buckets according to some rules depending on applied meta-hash function.
 Before hashing, vectors can be augmented using one of approaches presented in the beginning
