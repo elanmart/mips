@@ -16,8 +16,6 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.linear_model.logistic import _check_solver_option, _fit_liblinear
 import faiss
 class LinearClassifierMixin(ClassifierMixin):
-    def __init__(self, d):
-        self.index = self._default_index(d)
     def decision_function(self, X):
         if not hasattr(self, 'coef_') or self.coef_ is None:
             raise NotFittedError("This %(name)s instance is not fitted "
@@ -46,12 +44,14 @@ class LinearClassifierMixin(ClassifierMixin):
             # OvR normalization, like LibLinear's predict_probability
             prob /= prob.sum(axis=1).reshape((prob.shape[0], -1))
             return prob
-
+    
     def train_internal_index(self):
+        self.index = self._default_index(self.coef_.shape[1])
         w = self.coef_
         self.index.train(w)
-        self.index.add(w)            
-        return self
+        self.index.add(w)
+	return self    
+        
     def _default_index(self, d):
         index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
         index.nprobe = 256        
