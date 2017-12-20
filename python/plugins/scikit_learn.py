@@ -1,7 +1,9 @@
 import sys
 import os
 import numbers
-sys.path.append(os.path.abspath('/home/aga/Pulpit/mips/mips/faiss/'))
+#path works when file in mips/python/plugins																																																																																		
+sys.path.append(os.path.abspath('../../faiss/'))
+sys.path.append(os.path.abspath('../../python/'))
 
 import sklearn as sk
 import numpy as np
@@ -48,9 +50,9 @@ class LinearClassifierMixin(ClassifierMixin):
     def train_internal_index(self):
         self.index = self._default_index(self.coef_.shape[1])
         w = self.coef_
-        self.index.train(w)
-        self.index.add(w)
-	return self    
+        self.index.train(np.ascontiguousarray(w, dtype=np.float32))
+        self.index.add(np.ascontiguousarray(w, dtype=np.float32))
+        return self    
         
     def _default_index(self, d):
         index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
