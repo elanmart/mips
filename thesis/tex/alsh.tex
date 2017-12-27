@@ -13,10 +13,10 @@ It is assumed that meta-hash function is better suited to discover in what ways 
 resemble one another.
 After a vector is hashed by all $K$ functions, outputs taken together form a hash table key.
 An entry in hash table consists of key pointing to a set of vector indices for which the meta-hash function
-returned this exact key. In other words, vectors are placed in ,,buckets'' --
+returned this exact key. In other words, vectors are placed in ,,buckets'' ---
 every bucket represents one value of meta-hash and consequently contains similar vectors, where
 similarity is more precisely evaluated than one single hash function would evaluate.
-To allow even higher abstraction level, $L$ meta-hash functions can be used to create $L$ hash tables --
+To allow even higher abstraction level, $L$ meta-hash functions can be used to create $L$ hash tables ---
 vectors will be placed in $L$ sets of buckets according to some rules depending on applied meta-hash function.
 Before hashing, vectors can be augmented using one of approaches presented in the beginning
 of this section, e.g. Shrivastrava's or Neyshabur's transformation.
@@ -29,7 +29,7 @@ we succeed, this bucket contains vectors we are interested in.
 Vectors' indices acquired this way are collected from every hash table and form candidate set from which top-$k$
 most similar vectors should be chosen. In order to do that, exhaustive search can be performed.
 Another idea is to create a ranking sorted by number of tables in which a collision
-between query and vector occurred, although this seems computationally expensive.
+between query and vector occurred.
 \par
 In the $i^{th}$ hash table the meta-hash function contains $K$ functions: $h_{1,i},$ $h_{2,i},$ $...,$ $h_{K,i}$.
 By hashing the vector $x_j$ we will get the key $H_{i,j} = $ $[h_{1,i}(x_j),$ $h_{2,i}(x_j),$
@@ -37,11 +37,49 @@ $..., h_{K,i}(x_j)]$ under which the index of $j^{th}$ vector of database should
 placed in $i^{th}$ hash table. The following equation describes implemented hash function.
 $N$ denotes Gaussian distribution and $U$ denotes random uniform distribution.
 \begin{equation*}
-h_{i,j}(\bm{x}) = \floor*{\frac{\bm{a_{i,j}^T x} + b_{i,j}}{r}}, \bm{a_{i,j}} \sim N(0,1), b_{i,j} \sim U(0,r)
+h_{i,j}(x) = \floor*{\frac{a_{i,j}^T x + b_{i,j}}{r}}, a_{i,j} \sim N(0,1), b_{i,j} \sim U(0,r)
 \end{equation*}
 \par
 Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole
 algorithm, also in the querying phase. Parameters specific to this algorithm are $L$, $K$ and $r$.
+
+\begin{algorithm}
+	\caption{ALSH clustering}
+	\begin{algorithmic}
+		\For{$l = 0, 1, ..., L$}
+			\For{$k = 0, 1, ..., K$}
+				\State Key[$k$] $\gets$ Hash($k, l, x$)
+			\EndFor
+			\State HashTables[$l$][Key].Vectors $\gets x$
+		\EndFor
+		\State \Return HashTables
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+	\caption{ALSH querying}
+	\begin{algorithmic}
+		\State Result $\gets \emptyset$
+		\For{$l = 0, 1, ..., L$}
+			\For{$k = 0, 1, ..., K$}
+				\State Key[$k$] $\gets$ Hash($k, l, q$)
+			\EndFor
+			\State Result $\gets$ Result $\cup$ HashTables[$l$][Key].Vectors
+		\EndFor
+		\State \Return Result
+	\end{algorithmic}
+\end{algorithm}
+
+\subsubsection*{Computational complexity}
+Similar to the assumption made in $k$-means section, vector multiplication is the elementary operation here as well.
+The hash function we use does not do much more (except one addition, one division and one rounding),
+so in this analysis whole hash function will be regarded as elementary operation.
+The index construction phase has linear complexity of $O(nKL)$, because every of $n$ database vectors
+has to be hashed $K$ times in every of $L$ hash tables.
+The querying phase has constant complexity of $O(KL)$ because the query must be hashed $K$ times in $L$ hash tables.
+
+
+\subsubsection*{Example}
 Preparation of $L = 2$ hash tables for a database having 4 vectors:
 $x_1, x_2, x_3$ and $x_4$ is presented below.
 First, vectors' keys in both tables are computed and based on them hash tables are created:

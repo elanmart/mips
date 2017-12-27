@@ -4,14 +4,57 @@ looks for similarities between parts of vectors.
 One can view it as trying to match queries to vectors independently for every part and
 by using this knowledge, estimating how well queries will match whole vectors.
 The parts are not vectors simply cut into pieces but they are prepared randomly
- -- all vectors and queries are permuted (the order of vectors' components changed)
+ --- all vectors and queries are permuted (the order of vectors' components changed)
 by a fixed permutation.
 \par
 Each vector should be then mapped into $K$ subspaces, i.e. divided into $K$ parts with equal number of components.
 Let us denote the set of $i^{th}$ parts of all vectors in database by $P_i$.
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{c|c|c|c|c|}
+\multicolumn{1}{r}{} & \multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
+& \multicolumn{1}{c}{$\cdots$} & \multicolumn{1}{c}{$P_{K}$} \\
+\hhline{~----}
+$x_1$ = & $p_{1,1}$ & $p_{1,2}$ & $\cdots$ & $p_{1,K}$ \\
+\hhline{~----}
+$x_2$ = & $p_{2,1}$ & $p_{2,2}$ & $\cdots$ & $p_{2,K}$ \\
+\hhline{~----}
+$\vdots$ & $\vdots$ & $\vdots$ & $\ddots$ & $\vdots$ \\
+\hhline{~----}
+$x_n$ = & $p_{n,1}$ & $p_{n,2}$ & $\cdots$ & $p_{n,K}$ \\
+\hhline{~----}
+\end{tabular}
+\end{center}
+
+\begin{equation*}
+P_i = \{ p_{1,i}, p_{2,i}, \ldots, p_{n,i} \}
+\end{equation*}
+
 The essential step in algorithm is to perform $k$-means procedure on every set $P_i$.
-This gives $k$ centroids $C_{i,j}$ and assignments of parts in $P_i$ to these centroids.
-Every set has got its own independent centroids, different from other sets' centroids.
+This gives $k$ centroids $C_{i,j}$ and assignments $c_{i,l}$ of parts in $P_i$ to these centroids.
+Every set has got its own independent centroids, which can be different from other sets' centroids.
+
+\begin{center}
+\renewcommand{\arraystretch}{1.2}
+\begin{tabular}{c|c|c|c|c|}
+\multicolumn{1}{r}{} & \multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
+& \multicolumn{1}{c}{$\cdots$} & \multicolumn{1}{c}{$P_{K}$} \\
+\hhline{~----}
+$x_1$ & $c_{1,1}$ & $c_{2,1}$ & $\cdots$ & $c_{K,1}$ \\
+\hhline{~----}
+$x_2$ & $c_{1,2}$ & $c_{2,2}$ & $\cdots$ & $c_{K,2}$ \\
+\hhline{~----}
+$\vdots$ & $\vdots$ & $\vdots$ & $\ddots$ & $\vdots$ \\
+\hhline{~----}
+$x_n$ & $c_{1,n}$ & $c_{2,n}$ & $\cdots$ & $c_{K,n}$ \\
+\hhline{~----}
+\end{tabular}
+\end{center}
+
+\begin{equation*}
+\forall_i \forall_l\ \  c_{i,l} \in \{1,2,...,k\}
+\end{equation*}
+
 $k$-means clustering mentioned above means that vectors are quantized at the level of parts
 and whole vector is represented by approximations of its parts.
 \par
@@ -23,82 +66,26 @@ these products once and use them when needed.
 Because of that a table $T$ having $K$ columns and $k$ rows has to be created.
 Table entry $T_{i,j}$ is a dot product between $i^{th}$ part of query $q$ ($q_i$) and $j^{th}$
 centroid assigned to set $P_i$ ($C_{i,j}$).
-Inner product approximation for vector $x_l$ is then
-$$\sum_{i=1}^{K} T_{i,c_{i,l}} = \sum_{i=1}^{K} q_i^T C_{i,c_{i,l}}$$ where $c_{i,l}$ is
-the centroid assigned to $x_l$ in part $i$.
-In the end, certain number of vectors with highest approximations is reported.
 
-\par
-Consider database of $n = 5$ vectors already divided into $K = 4$ parts:
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{c|c|c|c|c|}
-\multicolumn{1}{r}{} & \multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
-& \multicolumn{1}{c}{$P_{3}$} & \multicolumn{1}{c}{$P_{4}$} \\
-\hhline{~----}
-$x_1$ = & $p_{1,1}$ & $p_{1,2}$ & $p_{1,3}$ & $p_{1,4}$ \\
-\hhline{~----}
-$x_2$ = & $p_{2,1}$ & $p_{2,2}$ & $p_{2,3}$ & $p_{2,4}$ \\
-\hhline{~----}
-$x_3$ = & $p_{3,1}$ & $p_{3,2}$ & $p_{3,3}$ & $p_{3,4}$ \\
-\hhline{~----}
-$x_4$ = & $p_{4,1}$ & $p_{4,2}$ & $p_{4,3}$ & $p_{4,4}$ \\
-\hhline{~----}
-$x_5$ = & $p_{5,1}$ & $p_{5,2}$ & $p_{5,3}$ & $p_{5,4}$ \\
-\hhline{~----}
-\end{tabular}
-$\ \ \ \ \ P_i = \{ p_{1,i}, p_{2,i}, \ldots, p_{n,i} \}$ \\
-\end{center}
-
-\smallskip
-
-Let us assume that each set $P_i$ has been clustered to $k=2$ centroids
-($C_{1,i}, C_{2,i}, i \in \{1,2,3,4\}$) as shown below.
-\begin{center}
-\renewcommand{\arraystretch}{1.2}
-\begin{tabular}{c|c|c|c|c|}
-\multicolumn{1}{r}{} & \multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
-& \multicolumn{1}{c}{$P_{3}$} & \multicolumn{1}{c}{$P_{4}$} \\
-\hhline{~----}
-$x_1$ & $C_{2,1}$ & $C_{1,2}$ & $C_{2,3}$ & $C_{1,4}$ \\
-\hhline{~----}
-$x_2$ & $C_{1,1}$ & $C_{1,2}$ & $C_{2,3}$ & $C_{1,4}$ \\
-\hhline{~----}
-$x_3$ & $C_{2,1}$ & $C_{2,2}$ & $C_{2,3}$ & $C_{1,4}$ \\
-\hhline{~----}
-$x_4$ & $C_{1,1}$ & $C_{2,2}$ & $C_{1,3}$ & $C_{2,4}$ \\
-\hhline{~----}
-$x_5$ & $C_{1,1}$ & $C_{1,2}$ & $C_{2,3}$ & $C_{2,4}$ \\
-\hhline{~----}
-\end{tabular}
-\end{center}
-
-\smallskip
-
-After dividing query into parts $q_1, q_2, \ldots, q_K$ the pre-computed table $T$ will look as follows:
 \renewcommand{\arraystretch}{1.6}
 \begin{center}
-\begin{tabular}{c|c|c|c|c|}
-\multicolumn{1}{r}{} & \multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
-& \multicolumn{1}{c}{$P_{3}$} & \multicolumn{1}{c}{$P_{4}$} \\
-\hhline{~----}
-$k = 1$ & $ q_1^T C_{1,1} $ & $ q_2^T C_{1,2} $ & $ q_3^T C_{1,3} $ & $ q_4^T C_{1,4} $\\
-\hhline{~----}
-$k = 2$ & $ q_1^T C_{2,1} $ & $ q_2^T C_{2,2} $ & $ q_3^T C_{2,3} $ & $ q_4^T C_{2,4} $\\
-\hhline{~----}
+\begin{tabular}{|c|c|c|c|}
+\multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
+& \multicolumn{1}{c}{$\cdots$} & \multicolumn{1}{c}{$P_{K}$} \\
+\hhline{----}
+$ q_1^T C_{1,1} $ & $ q_2^T C_{2,1} $ & $ \cdots $ & $ q_K^T C_{K,1} $\\
+\hhline{----}
+$ q_1^T C_{1,2} $ & $ q_2^T C_{2,2} $ & $ \cdots $ & $ q_K^T C_{K,2} $\\
+\hhline{----}
+$ \vdots $ & $ \vdots $ & $ \ddots $ & $ \vdots $\\
+\hhline{----}
+$ q_1^T C_{1,k} $ & $ q_2^T C_{2,k} $ & $ \cdots $ & $ q_K^T C_{K,k} $\\
+\hhline{----}
 \end{tabular}
 \end{center}
 
-\smallskip
-
-Based on table $T$ is it easy to calculate inner product approximations:
-\begin{gather*}
- q^T x_1 \approx q_1^T C_{2,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{1,4} = T_{1,2} + T_{2,1} + T_{3,2} + T_{4,1} \\
- q^T x_2 \approx q_1^T C_{1,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{1,4} = T_{1,1} + T_{2,1} + T_{3,2} + T_{4,1} \\
- q^T x_3 \approx q_1^T C_{2,1} + q_2^T C_{2,2} + q_3^T C_{2,3} + q_4^T C_{1,4} = T_{1,2} + T_{2,2} + T_{3,2} + T_{4,1} \\
- q^T x_4 \approx q_1^T C_{1,1} + q_2^T C_{2,2} + q_3^T C_{1,3} + q_4^T C_{2,4} = T_{1,1} + T_{2,2} + T_{3,1} + T_{4,2} \\
- q^T x_5 \approx q_1^T C_{1,1} + q_2^T C_{1,2} + q_3^T C_{2,3} + q_4^T C_{2,4} = T_{1,1} + T_{2,1} + T_{3,2} + T_{4,2}
-\end{gather*}
-
-The squared error arising from clustering can be expressed this way:
-$$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, c_{i,l}} - p_{l,i})]^2, l = 1, 2, \ldots, n$$
+Inner product approximation for vector $x_l$ is then
+$$\sum_{i=1}^{K} T_{i,c_{i,l}} = \sum_{i=1}^{K} q_i^T C_{i,c_{i,l}}$$
+In the end, certain number of vectors with highest approximations is reported.
+For each vector $x_l$, $l = 1,2,...,n$, the squared error arising from clustering can be expressed this way:
+$$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, c_{i,l}} - p_{l,i})]^2$$

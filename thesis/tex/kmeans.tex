@@ -58,17 +58,17 @@ takes into account only vector direction, not the magnitude.
 \end{algorithm}
 
 In practice, we use a constant number of 25 outermost loop iterations
-instead of waiting for full convergence -- further improvements are negligible.
+instead of waiting for full convergence --- further improvements are negligible.
 
 If straightforward implementation is used, each assignment step performs
 $O(N \cdot K)$ vector operations (where $N$ is number of data vectors and
-$K$ -- number of centroids), and each clustering step -- $O(K^2)$. Since
+$K$ --- number of centroids), and each clustering step --- $O(K^2)$. Since
 $K \le N$, time complexity is determined by the assignment step. For a real
 world scenario with $N = 10^6$ and $K = 4000$, there is approximately
-$25 \cdot 10^6 \cdot 4000 = 10^{11}$ vector operations to be done -- since vectors
+$25 \cdot 10^6 \cdot 4000 = 10^{11}$ vector operations to be done --- since vectors
 can have a couple hundred of components, that figure increases to roughly
 $10^{13}$ floating point operations. This takes considerable amount of time,
-but it is a one-time calculation -- each query can then be answered without
+but it is a one-time calculation --- each query can then be answered without
 recalculating centroids.
 
 Query is answered by first calculating its inner product with each centroid,
@@ -114,11 +114,11 @@ to exactly one centroid. Total complexity is thus $O(K + \frac{N}{K})$. Since
 $K$ is parameter of this algorithm, it can be varied to measure efficiency. It
 can be expected that good results should be obtained for $K \approx \sqrt{N}$ 
 though, as this value minimizes expression $K + \frac{N}{K}$, for optimal
-complexity of $O(\sqrt(N) + \frac{N}{\sqrt{N}}) = O(\sqrt{N})$. However, note that other
-values of $K$ result in different level of approximation -- there is
+complexity of $O(\sqrt{N} + \frac{N}{\sqrt{N}}) = O(\sqrt{N})$. However, note that other
+values of $K$ result in different level of approximation --- there is
 a tradeoff between time and accuracy. 
 
-There is also a second way of improving accuracy at the cost of time -- more
+There is also a second way of improving accuracy at the cost of time --- more
 than one centroid's children can be searched. This increases complexity of the
 second loop roughly $n$ times (where $n$ is number of selected centroids),
 but increases probability that returned vector is the correct one. Further
@@ -138,7 +138,7 @@ In this approach, data vectors are quantized, like previously,
 using $K$-means algorithm.
 The difference is, that the resulting centroids are clustered again, forming
 a second layer of centroids. Querying is similar to the non-hierarchical
-approach too -- best top-layer centroid is selected, then its best child and
+approach too --- best top-layer centroid is selected, then its best child and
 so on. This approach can be generalized to a higher number of layers $L$ 
 easily.
 
@@ -189,13 +189,13 @@ values as previously ($ N=10^6 $) with two layers only approximately
 $ \sqrt[2+1]{10^6} \cdot (2 + 1) = 300 $ inner products are needed, as opposed
 to $ \sqrt{10^6} \cdot 2 = 2000 $ using a single layer like in flat $K$-means.
 Potential time gains are even bigger for 3 or 4 centroid layers\footnote{
-There is a theoretical limit for improvement -- at point where increasing
+There is a theoretical limit for improvement --- at point where increasing
 number of layers leads to slower search because of the multiplicative $L+1$ factor.
 This limit is in practice large enough that accuracy degradation is too 
 significant for this number of layers to be feasible anyway. 
 For $N=10^6$, theoretical limit is $15$ layers, corresponding to average 
 of $2.5$ children per centroid, i.e. almost binary tree.
-}. There is a problem however -- there are few top-layer clusters, 
+}. There is a problem however --- there are few top-layer clusters,
 meaning they have many last-layer eventual descendants. That causes the
 original algorithm assumption of centroids being close to points they represent
 to become weaker. This leads to decrease in accuracy with increasing layer
@@ -241,10 +241,10 @@ $$
 \frac{K_i}{K_{i+1}} = \frac{K_{i-1}}{K_i}
 $$
 
-We can now see that ratios of consecutive cluster sizes are constant -- in other
+We can now see that ratios of consecutive cluster sizes are constant --- in other
 words, they form a geometric progression. The first term in the sequence,
 $K_0$ is known to be equal to number of data vectors, $N$. From equation
-for derivative of $K_L$, last -- $(L+1)^{th}$ -- term is known to be $n$. From this,
+for derivative of $K_L$, last --- $(L+1)^{th}$ --- term is known to be $n$. From this,
 the common ratio is calculated to be $\sqrt[L+1]{n}$. The general formula
 for number of centroids on $i^{th}$ of $L$ layers minimizing total number of
 inner products is hence:
@@ -273,13 +273,13 @@ P = K_2 + \frac{K_1}{K_2} \cdot n + \frac{N}{K_1} \cdot n =
 $$
 
 A roughly threefold improvement can be seen by using the theoretical optima.
-This does not mean though that the accuracy stays the same -- it is possible
+This does not mean though that the accuracy stays the same --- it is possible
 for the change in cluster sizes to create worse quantization. Another
-possible effect can be seen when more than one best vector is required --
+possible effect can be seen when more than one best vector is required ---
 in our benchmarks, top-100 candidates are returned. Smaller clusters near
 the bottom layer mean that for constant $n$ parameter, smaller number of
 data vectors will be searched.
 In either case, the centroids can
 be trained using optimal values for some value of $n$, but then be queried
-with another parameter $n$ value. Careful choosing these two parameters --
+with another parameter $n$ value. Careful choosing these two parameters ---
 $n_{train}$ and $n_{query}$ may lead to satisfying accuracy at shorter time.
