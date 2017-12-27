@@ -1,7 +1,9 @@
 import sys
 import os
 import numbers
-sys.path.append(os.path.abspath('/home/aga/Pulpit/mips/faiss/'))
+#path works when file in mips/python/plugins																																																																																		
+sys.path.append(os.path.abspath('../../faiss/'))
+sys.path.append(os.path.abspath('../../python/'))
 
 import sklearn as sk
 import numpy as np
@@ -16,13 +18,12 @@ from sklearn.utils.multiclass import check_classification_targets
 from sklearn.linear_model.logistic import _check_solver_option, _fit_liblinear
 import faiss
 class LinearClassifierMixin(ClassifierMixin):
-        
     def decision_function(self, X):
         if not hasattr(self, 'coef_') or self.coef_ is None:
             raise NotFittedError("This %(name)s instance is not fitted "
                                  "yet" % {'name': type(self).__name__})
 
-        X = check_array(X, accept_sparse='csr')
+        X = check_array(X, accept_sparse = False)
 
         n_features = self.coef_.shape[1]
         if X.shape[1] != n_features:
@@ -31,15 +32,6 @@ class LinearClassifierMixin(ClassifierMixin):
 
         scores = self.index.search(X)
         return scores.ravel() if scores.shape[1] == 1 else scores
-
-    def predict(self, X):
-
-        scores = self.decision_function(X)
-        if len(scores.shape) == 1:
-            indices = (scores > 0).astype(np.int)
-        else:
-            indices = scores.argmax(axis=1)
-        return self.classes_[indices]
 
     def _predict_proba_lr(self, X):
 
@@ -54,18 +46,23 @@ class LinearClassifierMixin(ClassifierMixin):
             # OvR normalization, like LibLinear's predict_probability
             prob /= prob.sum(axis=1).reshape((prob.shape[0], -1))
             return prob
-
+    
     def train_internal_index(self):
+        self.index = self._default_index(self.coef_.shape[1])
         w = self.coef_
-        self.index.train(w)
-        self.index.add(w)            
-        return self
-
+        self.index.train(np.ascontiguousarray(w, dtype=np.float32))
+        self.index.add(np.ascontiguousarray(w, dtype=np.float32))
+        return self    
+        
+    def _default_index(self, d):
+        index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
+        index.nprobe = 256        
+        return index
 
 class LogisticRegression(BaseEstimator, LinearClassifierMixin,
                          SparseCoefMixin):
 
-    def __init__(self,d, penalty='l2', dual=False, tol=1e-4, C=1.0,
+    def __init__(self, penalty='l2', dual=False, tol=1e-4, C=1.0,
                  fit_intercept=True, intercept_scaling=1, class_weight=None,
                  random_state=None, solver='liblinear', max_iter=100,
                  multi_class='ovr', verbose=0, warm_start=False, n_jobs=1):
@@ -84,7 +81,6 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
         self.verbose = verbose
         self.warm_start = warm_start
         self.n_jobs = n_jobs
-        self.index = self._default_index(d)
 
     def fit(self, X, y, sample_weight=None):
         
@@ -208,9 +204,4 @@ class LogisticRegression(BaseEstimator, LinearClassifierMixin,
 
     def predict_log_proba(self, X):
         return np.log(self.predict_proba(X))
-    def _default_index(self, d):
-        index = faiss.index_factory(d, "IVF512,Flat", faiss.METRIC_INNER_PRODUCT)
-        index.nprobe = 256        
-        return index
-
 
