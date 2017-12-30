@@ -31,28 +31,28 @@ P_i = \{ p_{1,i}, p_{2,i}, \ldots, p_{n,i} \}
 \end{equation*}
 
 The essential step in algorithm is to perform $k$-means procedure on every set $P_i$.
-This gives $k$ centroids $C_{i,j}$ and assignments $c_{i,l}$ of parts in $P_i$ to these centroids.
+This gives $k$ centroids $C_{i,j}$ and assignments $A_{i,l}$ of parts in $P_i$ to these centroids.
 Every set has got its own independent centroids, which can be different from other sets' centroids.
 
 \begin{center}
 \renewcommand{\arraystretch}{1.2}
 \begin{tabular}{c|c|c|c|c|}
-\multicolumn{1}{r}{} & \multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
-& \multicolumn{1}{c}{$\cdots$} & \multicolumn{1}{c}{$P_{K}$} \\
+\multicolumn{1}{r}{} & \multicolumn{1}{c}{$A_{1}$} & \multicolumn{1}{c}{$A_{2}$}
+& \multicolumn{1}{c}{$\cdots$} & \multicolumn{1}{c}{$A_{K}$} \\
 \hhline{~----}
-$x_1$ & $c_{1,1}$ & $c_{2,1}$ & $\cdots$ & $c_{K,1}$ \\
+$x_1$ & $A_{1,1}$ & $A_{2,1}$ & $\cdots$ & $A_{K,1}$ \\
 \hhline{~----}
-$x_2$ & $c_{1,2}$ & $c_{2,2}$ & $\cdots$ & $c_{K,2}$ \\
+$x_2$ & $A_{1,2}$ & $A_{2,2}$ & $\cdots$ & $A_{K,2}$ \\
 \hhline{~----}
 $\vdots$ & $\vdots$ & $\vdots$ & $\ddots$ & $\vdots$ \\
 \hhline{~----}
-$x_n$ & $c_{1,n}$ & $c_{2,n}$ & $\cdots$ & $c_{K,n}$ \\
+$x_n$ & $A_{1,n}$ & $A_{2,n}$ & $\cdots$ & $A_{K,n}$ \\
 \hhline{~----}
 \end{tabular}
 \end{center}
 
 \begin{equation*}
-\forall_i \forall_l\ \  c_{i,l} \in \{1,2,...,k\}
+\forall_i \forall_l\ \  A_{i,l} \in \{1,2,...,k\}
 \end{equation*}
 
 $k$-means clustering mentioned above means that vectors are quantized at the level of parts
@@ -70,8 +70,6 @@ centroid assigned to set $P_i$ ($C_{i,j}$).
 \renewcommand{\arraystretch}{1.6}
 \begin{center}
 \begin{tabular}{|c|c|c|c|}
-\multicolumn{1}{c}{$P_{1}$} & \multicolumn{1}{c}{$P_{2}$}
-& \multicolumn{1}{c}{$\cdots$} & \multicolumn{1}{c}{$P_{K}$} \\
 \hhline{----}
 $ q_1^T C_{1,1} $ & $ q_2^T C_{2,1} $ & $ \cdots $ & $ q_K^T C_{K,1} $\\
 \hhline{----}
@@ -85,7 +83,46 @@ $ q_1^T C_{1,k} $ & $ q_2^T C_{2,k} $ & $ \cdots $ & $ q_K^T C_{K,k} $\\
 \end{center}
 
 Inner product approximation for vector $x_l$ is then
-$$\sum_{i=1}^{K} T_{i,c_{i,l}} = \sum_{i=1}^{K} q_i^T C_{i,c_{i,l}}$$
+$$\sum_{i=1}^{K} T_{i,A_{i,l}} = \sum_{i=1}^{K} q_i^T C_{i,A_{i,l}}$$
 In the end, certain number of vectors with highest approximations is reported.
 For each vector $x_l$, $l = 1,2,...,n$, the squared error arising from clustering can be expressed this way:
-$$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, c_{i,l}} - p_{l,i})]^2$$
+$$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, A_{i,l}} - p_{l,i})]^2$$
+
+\begin{algorithm}
+	\caption{Quantization-based clustering}
+	\begin{algorithmic}
+		\For{$i = 0, 1, ..., K$}
+			\State $P_i = \emptyset$
+		\EndFor
+		\For{$l = 0, 1, ..., n$}
+			\State $x_l' \gets$ RandomPermutation($x_l$)
+			\State $part[0], part[1], ..., part[K] \gets$ MakeParts($x_l'$)
+			\For{$i = 0, 1, ..., K$}
+				\State $P_i = P_i \cup part[i]$
+			\EndFor
+		\EndFor
+		\For{$i = 0, 1, ..., K$}
+			\State $C_i = \{C_{i,1}, C_{i,2}, ..., C_{i,k}\}, A_i = \{A_{i,1}, A_{i,2}, ..., A_{i,n}\} \gets$ Kmeans($P_i, K$)
+		\EndFor
+	\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}
+	\caption{Quantization-based querying}
+	\begin{algorithmic}
+		\State $q' \gets$ RandomPermutation($q$)
+		\State $q_0, q_1, ..., q_K \gets$ MakeParts($q'$)
+		\For{$i = 0, 1, ..., K$}
+			\For{$j = 0, 1, ..., k$}
+				\State $T_{i,j} = q_i^T C_{i,j}$
+			\EndFor
+		\EndFor
+		\For{$l = 0, 1, ..., n$}
+			\State Result[$l$] $\gets 0$
+			\For{$i = 0, 1, ..., K$}
+				\State Result[$l$] $\gets$ Result[$l$]$+ T_{i,A_{i,l}}$
+			\EndFor
+		\EndFor
+		\State \Return $\argmax_{l}$ Result[$l$]
+	\end{algorithmic}
+\end{algorithm}
