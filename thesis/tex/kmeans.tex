@@ -30,14 +30,15 @@ approximations for it. The most common and simple algorithm is known as
 Lloyd's algorithm. It consists of two steps performed alternately a number of
 times. At each iteration, a set of centroids $C$ is maintained (randomly
 initialized at algorithm start). The first
-step of an iteration is assignment of each data vector to the centroid that
+step of an iteration is assignment of each data vector $x_i$ to the
+centroid $C_{A_i}$ that
 is nearest to it. Then, in a second step, each centroid's value is updated
 to a new value, equal to arithmetic average of all vectors assigned to
 it\footnote{
 In case of MCSS, a modified algorithm called spherical $K$-means can be used.
 It is essentially the same, with the only difference being additional
 centroid normalization after each update. This is because MCSS
-takes into account only vector direction, not the magnitude.
+takes into account only vector direction, ignoring the magnitude.
 }.
 
 \begin{algorithm}[H]
@@ -72,7 +73,7 @@ but it is a one-time calculation --- each query can then be answered without
 recalculating centroids.
 
 Query is answered by first calculating its inner product with each centroid,
-finding out which centroid maximizes it, then multiply query with each vector
+finding out which centroid $c$ maximizes it, then multiply query with each vector
 whose quantization is that centroid. Return the one
 with the biggest inner product. In essence, it is two exhaustive searches,
 first over set of centroids, then over set of its children.
@@ -82,17 +83,15 @@ first over set of centroids, then over set of its children.
 	\begin{algorithmic}
 		\State $B \gets -\infty$
 		\For{$ i < K $}
-			\State $IP \gets C_i \cdot q$
-			\If{$IP > B$}
-				\State $B \gets IP$
+			\If{$C_i \cdot q > B$}
+				\State $B \gets C_i \cdot q$
 				\State $c \gets i$
 			\EndIf
 		\EndFor
 		\State $B \gets -\infty$
 		\For{$ j \in \{ j\ |\ A_j = c \} $}
-			\State $IP \gets x_j \cdot q$
-			\If {$IP > B$}
-				\State $B \gets IP$
+			\If {$x_j \cdot q > B$}
+				\State $B \gets x_j \cdot q$
 				\State $r \gets j$
 			\EndIf
 		\EndFor
@@ -109,7 +108,7 @@ reducing complexity to stated $O(BF)$.}.
 $BF$ in this case denotes
 branching factor, defined as number of children of centroid. This is rarely
 constant, but can be approximated by average branching factor of all centroids,
-which is $O(\frac{N}{K})$, since every of $N$ data vectors has to be assigned
+which is $O(\frac{N}{K})$, since each of $N$ data vectors has to be assigned
 to exactly one centroid. Total complexity is thus $O(K + \frac{N}{K})$. Since
 $K$ is parameter of this algorithm, it can be varied to measure efficiency. It
 can be expected that good results should be obtained for $K \approx \sqrt{N}$ 
@@ -138,7 +137,8 @@ In this approach, data vectors are quantized, like previously,
 using $K$-means algorithm.
 The difference is, that the resulting centroids are clustered again, forming
 a second layer of centroids. Querying is similar to the non-hierarchical
-approach too --- best top-layer centroid is selected, then its best child and
+approach too --- query is first multiplied with all top-layer centroids,
+best of them is selected, then its best child and
 so on. This approach can be generalized to a higher number of layers $L$ 
 easily.
 
@@ -166,9 +166,9 @@ easily.
 		\For{$ i = L,\dots,0 $}
 			\State $ B \gets -\infty $
 			\For{$ s \in S $}
-				\State $ IP \gets q \cdot Layers[i].vectors[s] $
-				\If{$ IP > B $}
-					\State $ B \gets IP $
+				\State $ I \gets q \cdot Layers[i].vectors[s] $
+				\If{$ I > B $}
+					\State $ B \gets I $
 					\State $ r \gets s $
 				\EndIf
 			\EndFor

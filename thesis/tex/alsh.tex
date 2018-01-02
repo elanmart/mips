@@ -22,26 +22,32 @@ Before hashing, vectors can be augmented using one of approaches presented in th
 of this section, e.g. Shrivastrava's or Neyshabur's transformation.
 \par
 Searching the index with query can as well be preceded by its earlier transformation.
-Detecting which database vectors are most similar to query, relies on checking with which
+Detecting which database vectors are most similar to query relies on checking with which
 vectors the query collided after being hashed using exactly the same meta-hash functions.
-Speaking the bucket metaphor: in each bucket set we try to fit the query to some bucket and when
-we succeed, this bucket contains vectors we are interested in.
+Speaking the bucket metaphor: the bucket which contains the query, is also likely to contain
+vectors we are interested in.
 Vectors' indices acquired this way are collected from every hash table and form candidate set from which top-$k$
-most similar vectors should be chosen. In order to do that, exhaustive search can be performed.
+most similar vectors should be chosen. In order to do that, exhaustive search on these candidates
+can be performed.
 Another idea is to create a ranking sorted by number of tables in which a collision
 between query and vector occurred.
 \par
-In the $i^{th}$ hash table the meta-hash function contains $K$ functions: $h_{1,i},$ $h_{2,i},$ $...,$ $h_{K,i}$.
-By hashing the vector $x_j$ we will get the key $H_{i,j} = $ $[h_{1,i}(x_j),$ $h_{2,i}(x_j),$
-$..., h_{K,i}(x_j)]$ under which the index of $j^{th}$ vector of database should be
-placed in $i^{th}$ hash table. The following equation describes implemented hash function.
+Meta-hashes $H$ are concatenations of ordinary hashes $h$ --- so $j^{th}$ vector will be placed in 
+$i^{th}$ table in bucket\footnote{
+In actual implementation, the sequence of hashes is compressed to a single 64-bit integer. This
+marginally increases probability of unwanted collision, but improves speed and memory consumption.
+}:
+
+$$H_{i,j} = [h_{1,i}(x_j), h_{2,i}(x_j), \dots h_K(x_j)]$$
+
+The following equation describes implemented hash function.
 $N$ denotes Gaussian distribution and $U$ denotes random uniform distribution.
 \begin{equation*}
 h_{i,j}(x) = \floor*{\frac{a_{i,j}^T x + b_{i,j}}{r}}, a_{i,j} \sim N(0,1), b_{i,j} \sim U(0,r)
 \end{equation*}
 \par
 Random vectors $a_{i,j}$ and scalars $b_{i,j}$ are generated once and used throughout whole
-algorithm, also in the querying phase. Parameters specific to this algorithm are $L$, $K$ and $r$.
+algorithm, including the querying phase. Parameters specific to this algorithm are $L$, $K$ and $r$.
 
 \begin{algorithm}
 	\caption{ALSH clustering}
@@ -74,9 +80,9 @@ algorithm, also in the querying phase. Parameters specific to this algorithm are
 Similar to the assumption made in $k$-means section, vector multiplication is the elementary operation here as well.
 The hash function we use does not do much more (except one addition, one division and one rounding),
 so in this analysis whole hash function will be regarded as elementary operation.
-The index construction phase has linear complexity of $O(nKL)$, because every of $n$ database vectors
+The index construction phase has complexity of $O(nKL)$, because every of $n$ database vectors
 has to be hashed $K$ times in every of $L$ hash tables.
-The querying phase has constant complexity of $O(KL)$ because the query must be hashed $K$ times in $L$ hash tables.
+The querying phase has complexity of $O(KL)$ because the query must be hashed $K$ times in $L$ hash tables.
 
 
 \subsubsection*{Example}
