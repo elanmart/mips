@@ -23,6 +23,15 @@ Given that performance was a crucial consideration, we decided to implement our 
 Additionally, whenever possible, we reused highly performant components available as a part of the aforementioned Faiss,
 for example we heavily reuse their fast inner product routines. 
 
+A couple of provided routines for fast vector operations, such as inner product calculation, can
+operate in batch mode to increase speed. Vectors to be used in calculation are then concatenated
+to a contiguous array --- this makes sense, as it increases memory locality in comparison
+to "vector of vectors" way, where pointer indirection would be involved. Using such a data structure
+is quite error prone though, as one has to manually calculate offsets into the array. To improve
+usability, we abstracted it to a $FlatMatrix$ structure, which provides matrix-like API, while
+still storing data in single array. The underlying data storage is also accessible through a method,
+so that it can be used for highly optimized Faiss functions.
+
 \subsubsection{Wrapping C++ with Python}
 
 WRITEME
@@ -56,14 +65,15 @@ in its internal database, for each of \texttt{n} queries present in \texttt{data
 should reset the index to the default state.
 
 \item \texttt{train(int64\_t n, const float* data)} 
-should perform additional tuning of the index on \texttt{n} points present in \texttt{data}.
+may perform additional tuning of the index on \texttt{n} points present in \texttt{data}. This is
+optional, and in fact we leave this function empty.
 
 \end{itemize}
 
 Regarding code conventions, we apply the following:
 
 \begin{itemize}
-\item All objects are C++ structs, there is no notion of public/private fields.
-\item Classes are copy-constructable. [todo check this]
-\item All classes have a constructor without parameters that initializes parameters to some reproducible default. [todo]
+\item All objects are C++ structs, and all fields are public.
+\item Classes are copy-constructable. [todo check this - no w sumie nie, przez ten wskaźnik na augmentację. Ale po co to? Kopiowanie indeksu to strata czasu.]
+\item All classes have a constructor without parameters that initializes parameters to some reproducible default. [todo - A po co to?]
 \end{itemize}
