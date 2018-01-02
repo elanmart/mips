@@ -139,8 +139,9 @@ Multiplying these, we get $O(k \cdot d)$ floating-point multiplications.
 The second loop takes $O(n \cdot K)$ floating-point \textit{additions}. Additions are often
 cheaper than multiplications, but that does not change the asymptotics.
 
-Total runtime is thus $O(K \cdot (k + n))$, but since the number of centroids is bounded by
-the number of data vectors, the second term dominates and the expression can be simplified to
+Total runtime is thus $O(k \cdot d + n \cdot K)$, but the number of centroids $k$ is usually 
+relatively small --- if smaller than $\frac{n \cdot K}{d}$, the second term dominates 
+and the expression can be simplified to
 $O(K \cdot n)$. This is still linear in $n$ like full search, but has a smaller multiplicative
 term, leading to theoretical $O(\frac{d}{K})$ speedup (with possible extra speedup from changing
 multiplication to addition).
