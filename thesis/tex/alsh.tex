@@ -52,8 +52,8 @@ algorithm, including the querying phase. Parameters specific to this algorithm a
 \begin{algorithm}
 	\caption{ALSH clustering}
 	\begin{algorithmic}
-		\For{$l = 0, 1, ..., L$}
-			\For{$k = 0, 1, ..., K$}
+		\For{$l = 0, 1, \dots, L$}
+			\For{$k = 0, 1, \dots, K$}
 				\State Key[$k$] $\gets$ Hash($k, l, x$)
 			\EndFor
 			\State HashTables[$l$][Key].Vectors $\gets x$
@@ -66,8 +66,8 @@ algorithm, including the querying phase. Parameters specific to this algorithm a
 	\caption{ALSH querying}
 	\begin{algorithmic}
 		\State Result $\gets \emptyset$
-		\For{$l = 0, 1, ..., L$}
-			\For{$k = 0, 1, ..., K$}
+		\For{$l = 0, 1, \dots, L$}
+			\For{$k = 0, 1, \dots, K$}
 				\State Key[$k$] $\gets$ Hash($k, l, q$)
 			\EndFor
 			\State Result $\gets$ Result $\cup$ HashTables[$l$][Key].Vectors
