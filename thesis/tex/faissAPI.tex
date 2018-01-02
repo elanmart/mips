@@ -1,69 +1,69 @@
 
 \subsection{General Information}
 
-        
-    \subsubsection{Dependencies}
-    
-        Our library contains a number of dependencies. Most importantly, the core components rely on 
-        another library for \textit{Approximate Similarity Search}, Faiss \cite{faiss}.
-        Faiss in turn depends on Basic Linear Algebra Subprograms (BLAS) being available.
-        
-        Additionally, the Python parts of our code rely on several components: \texttt{pybind11} and \texttt{swig}
-        for bindings generation, standard data-science tools like \texttt{pandas} for data analysis, and naturally, on the
-        libraries that we create wrappers for. For more details we refer the reader to the \hyperref[sec:appendices]{appendix}.
-    
-    \subsubsection{Build System}
-        
-        Given a moderate size of our project, we decided to use \texttt{make} as our building tool. The \texttt{Makefile} we use
-        depends on variables set in configurable \texttt{makefile.inc}. Details regarding the build process can be found in the \hyperref[sec:appendices]{appendix}.
-        
-    \subsubsection{Performance considerations}
-        
-        Given that performance was a crucial consideration, we decided to implement our algorithms in C++.
-        Additionally, whenever possible, we reused highly performant components available as a part of the aforementioned Faiss,
-        for example we heavily reuse their fast inner product routines. 
-        
-    \subsubsection{Wrapping C++ with Python}
-        
-        WRITEME
 
-        memory management
-        
-        passing arrays
-    
-    \subsubsection{Interfaces}
-    
-        We use \texttt{pybind11} to provide an easy-to-use interface
-        TODO (we don't have any fucking interface)
-        
-    \subsubsection{Internal API}
+\subsubsection{Dependencies}
 
-        We have decided that our algorithms should expose the same API as defined in Faiss.
-        
-        Any given \texttt{Index} should implement the following methods:
-        \begin{itemize}
-            
-            \item A constructor without parameters that initializes parameters to some reproducible default.
-            
-            \item \texttt{add(int64\_t n, const float* data)} 
-                should add \texttt{n} vectors present in \texttt{data} to the index database.
-            
-            \item \texttt{search(idx\_t n, const float* data, idx\_t k, float* distances, idx\_t* labels)} 
-                should search \texttt{k} neares neighbours 
-                in its internal database, for each of \texttt{n} queries present in \texttt{data}, writing results to \texttt{distances} and \texttt{labels}.
-            
-            \item \texttt{reset(int64\_t, const float*)} 
-                should reset the index to the default state.
-            
-            \item \texttt{train(int64\_t n, const float* data)} 
-                should perform additional tuning of the index on \texttt{n} points present in \texttt{data}.
+Our library contains a number of dependencies. Most importantly, the core components rely on 
+another library for \textit{Approximate Similarity Search}, Faiss \cite{faiss}.
+Faiss in turn depends on Basic Linear Algebra Subprograms (BLAS) being available.
 
-        \end{itemize}
-        
-        Regarding code conventions, we apply the following:
-        
-        \begin{itemize}
-            \item All objects are C++ structs, there is no notion of public/private fields.
-            \item Classes are copy-constructable. [todo check this]
-            \item All classes have a constructor without parameters that initializes parameters to some reproducible default. [todo]
-        \end{itemize}
+Additionally, the Python parts of our code rely on several components: \texttt{pybind11} and \texttt{swig}
+for bindings generation, standard data-science tools like \texttt{pandas} for data analysis, and naturally, on the
+libraries that we create wrappers for. For more details we refer the reader to the \hyperref[sec:appendices]{appendix}.
+
+\subsubsection{Build System}
+
+Given a moderate size of our project, we decided to use \texttt{make} as our building tool. The \texttt{Makefile} we use
+depends on variables set in configurable \texttt{makefile.inc}. Details regarding the build process can be found in the \hyperref[sec:appendices]{appendix}.
+
+\subsubsection{Performance considerations}
+
+Given that performance was a crucial consideration, we decided to implement our algorithms in C++.
+Additionally, whenever possible, we reused highly performant components available as a part of the aforementioned Faiss,
+for example we heavily reuse their fast inner product routines. 
+
+\subsubsection{Wrapping C++ with Python}
+
+WRITEME
+
+memory management
+
+passing arrays
+
+\subsubsection{Interfaces}
+
+We use \texttt{pybind11} to provide an easy-to-use interface
+TODO (we don't have any fucking interface)
+
+\subsubsection{Internal API}
+
+We have decided that our algorithms should expose the same API as defined in Faiss.
+
+Any given \texttt{Index} should implement the following methods:
+\begin{itemize}
+
+\item A constructor without parameters that initializes parameters to some reproducible default.
+
+\item \texttt{add(int64\_t n, const float* data)} 
+should add \texttt{n} vectors present in \texttt{data} to the index database.
+
+\item \texttt{search(idx\_t n, const float* data, idx\_t k, float* distances, idx\_t* labels)} 
+should search \texttt{k} neares neighbours 
+in its internal database, for each of \texttt{n} queries present in \texttt{data}, writing results to \texttt{distances} and \texttt{labels}.
+
+\item \texttt{reset(int64\_t, const float*)} 
+should reset the index to the default state.
+
+\item \texttt{train(int64\_t n, const float* data)} 
+should perform additional tuning of the index on \texttt{n} points present in \texttt{data}.
+
+\end{itemize}
+
+Regarding code conventions, we apply the following:
+
+\begin{itemize}
+\item All objects are C++ structs, there is no notion of public/private fields.
+\item Classes are copy-constructable. [todo check this]
+\item All classes have a constructor without parameters that initializes parameters to some reproducible default. [todo]
+\end{itemize}
