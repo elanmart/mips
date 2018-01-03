@@ -21,14 +21,18 @@ speed up their models without ever touching any of our approximation algorithms.
 We provide a set of examples of how this library can be used in practice, as well detailed experiments measuring the speed and 
 accuracy of our algorithms.
 
-The rest of this thesis is structured as follows: (\texttt{TODO})
-\begin{itemize}
-    \setlength\itemsep{1pt}
-    \item Problem Description
-    \item Algorithms Description
-    \item Implementation Description
-    \item Wrappers Description
-    \item Experiments Description
-    \item Configuration Tutorial
-    \item Examples
-\end{itemize}
+The rest of this thesis is structured as follows.
+Second chapter contains description of MIPS problem.
+Third chapter is dedicated to theoretical description of algorithms aiming to solve MIPS.
+Fourth chapter describes implementation details of written software.
+Fifth chapter presents experiments' results.
+Sixth chapter concludes the thesis.
+There is appendix at the end which describes how to run our library.
+
+Marcin Elantkowski wrote wrappers translating C++ indices to Python, prepared data using his fork of FastText library, adapted the code so it could be used from Pytorch and ran final tests on Amazon Web Services.
+
+Adam Krasuski refactored earlier C++ code, implemented faiss interface and additional optimizations.
+
+Agnieszka Lipska implemented first version of quantization algorithm, implemented faiss interface and adapted the code to use it from Scikit-learn.
+
+Franciszek Walkowiak implemented naive versions of ALSH and hierarchical \mbox{k-means} and conducted preliminary tests on personal computer.
