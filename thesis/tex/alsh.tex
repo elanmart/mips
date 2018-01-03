@@ -76,13 +76,12 @@ algorithm, including the querying phase. Parameters specific to this algorithm a
 	\end{algorithmic}
 \end{algorithm}
 
-\subsubsection*{Computational complexity}
-Similar to the assumption made in $k$-means section, vector multiplication is the elementary operation here as well.
-The hash function we use does not do much more (except one addition, one division and one rounding),
-so in this analysis whole hash function will be regarded as elementary operation.
-The index construction phase has complexity of $O(nKL)$, because every of $n$ database vectors
+Vector multiplication is regarded as an elementary operation.
+The hash function we use does not do much more than that (except one addition, one division and one rounding),
+so whole hash function can be treated as elementary operation.
+The index construction phase has complexity of $O(n \cdot K \cdot L)$, because every of $n$ database vectors
 has to be hashed $K$ times in every of $L$ hash tables.
-The querying phase has complexity of $O(KL)$ because the query must be hashed $K$ times in $L$ hash tables.
+The querying phase has complexity of $O(K \cdot L)$ because the query must be hashed $K$ times in $L$ hash tables.
 
 
 \subsubsection*{Example}
