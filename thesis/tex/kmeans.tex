@@ -47,10 +47,10 @@ takes into account only vector direction, ignoring the magnitude.
 		\State $C \gets K \text{ random vectors}$
 		\Repeat
 			\For{$ i = 0,\dots,N-1 $}
-				\State $A_i \gets argmin_{j} \ || x_i - C_j || $
+				\State $A_i \gets \argmin_{j}\ || x_i - C_j || $
 			\EndFor
 			\For{$ j = 0,\dots,K-1 $}
-				\State $C_j \gets mean(\{x_i\ |\ A_i = C_j\}) $
+				\State $C_j \gets$ mean$(\{x_i\ |\ A_i = C_j\}) $
 			\EndFor
 		\Until {$ C \text{ stayed the same in this iteration} $}
 
@@ -146,13 +146,13 @@ easily.
 \begin{algorithm}[H]
 	\caption{Hierarchical $K$-means clustering}
 	\begin{algorithmic}
-		\State $ Layers[0].vectors \gets x $
+		\State Layers$[0]$.vectors $\gets x $
 		\For{$ i = 0,\dots,L $}
-			\State $ Layers[i].size \gets \left \lfloor N^{\frac{L + 1 - i}{L + 1}} \right \rfloor $
-			\State $ C,\ A \gets Kmeans(Layers[i - 1].vectors, Layers[i - 1].size) $
-			\State $ Layers[i].vectors \gets C $
-			\For {$ c = 0,\dots,Layers[i].size-1 $}
-				\State $ Layers[i].children[c] \gets \{ j\ |\ A[j] = c \} $
+			\State Layers$[i]$.size $\gets \left \lfloor N^{\frac{L + 1 - i}{L + 1}} \right \rfloor $
+			\State $ C,\ A \gets$ Kmeans(Layers$[i - 1]$.vectors, Layers$[i - 1]$.size)
+			\State Layers$[i]$.vectors $\gets C$
+			\For {$ c = 0,\dots,$Layers$[i]$.size$-1 $}
+				\State Layers$[i]$.children$[c] \gets \{ j\ |\ A[j] = c \} $
 			\EndFor
 		\EndFor
 		\State \Return {$ Layers $}
@@ -162,11 +162,11 @@ easily.
 \begin{algorithm}[H]
 	\caption{Hierarchical $K$-means querying}
 	\begin{algorithmic}
-		\State $ S \gets [0..Layers[L].size] $
+		\State $ S \gets [0..$Layers$[L].$size$]$
 		\For{$ i = L,\dots,0 $}
 			\State $ B \gets -\infty $
 			\For{$ s \in S $}
-				\State $ I \gets q \cdot Layers[i].vectors[s] $
+				\State $ I \gets q\ \cdot\ $Layers$[i]$.vectors$[s]$
 				\If{$ I > B $}
 					\State $ B \gets I $
 					\State $ r \gets s $
@@ -175,7 +175,7 @@ easily.
 			\If{$ i = 0 $}
 				\State \Return {$ r $}
 			\EndIf
-			\State $ S \gets Layers[i].children[r] $
+			\State $ S \gets\ $Layers$[i].$children$[r]$
 		\EndFor
 	\end{algorithmic}
 \end{algorithm}

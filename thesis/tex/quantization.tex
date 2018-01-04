@@ -95,18 +95,18 @@ $$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, A_{i,l}} - p_{l,i})]^2$$
 \begin{algorithm}
 	\caption{Quantization-based clustering}
 	\begin{algorithmic}
-		\For{$i = 0, 1, ..., K$}
+		\For{$i = 0, 1, \dots, K$}
 			\State $P_i = \emptyset$
 		\EndFor
-		\For{$l = 0, 1, ..., n$}
+		\For{$l = 0, 1, \dots, n$}
 			\State $x_l' \gets$ Permute($x_l$)
-			\State $part[0], part[1], ..., part[K] \gets$ MakeParts($x_l'$)
-			\For{$i = 0, 1, ..., K$}
+			\State $part[0], part[1], \dots, part[K] \gets$ MakeParts($x_l'$)
+			\For{$i = 0, 1, \dots, K$}
 				\State $P_i = P_i \cup part[i]$
 			\EndFor
 		\EndFor
-		\For{$i = 0, 1, ..., K$}
-			\State $C_i = \{C_{i,1}, C_{i,2}, ..., C_{i,k}\}, A_i = \{A_{i,1}, A_{i,2}, ..., A_{i,n}\} \gets$ Kmeans($P_i, K$)
+		\For{$i = 0, 1, \dots, K$}
+			\State $C_i = \{C_{i,1}, C_{i,2}, \dots, C_{i,k}\}, A_i = \{A_{i,1}, A_{i,2}, \dots, A_{i,n}\} \gets$ Kmeans($P_i, K$)
 		\EndFor
 	\end{algorithmic}
 \end{algorithm}
@@ -115,15 +115,15 @@ $$ \sum_{i=1}^{K}  [q_{i}^{T} (C_{i, A_{i,l}} - p_{l,i})]^2$$
 	\caption{Quantization-based querying}
 	\begin{algorithmic}
 		\State $q' \gets$ Permute($q$)
-		\State $q_0, q_1, ..., q_K \gets$ MakeParts($q'$)
-		\For{$i = 0, 1, ..., K$}
-			\For{$j = 0, 1, ..., k$}
+		\State $q_0, q_1, \dots, q_K \gets$ MakeParts($q'$)
+		\For{$i = 0, 1, \dots, K$}
+			\For{$j = 0, 1, \dots, k$}
 				\State $T_{i,j} = q_i^T C_{i,j}$
 			\EndFor
 		\EndFor
-		\For{$l = 0, 1, ..., n$}
+		\For{$l = 0, 1, \dots, n$}
 			\State Result[$l$] $\gets 0$
-			\For{$i = 0, 1, ..., K$}
+			\For{$i = 0, 1, \dots, K$}
 				\State Result[$l$] $\gets$ Result[$l$]$+ T_{i,A_{i,l}}$
 			\EndFor
 		\EndFor
