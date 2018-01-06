@@ -5,7 +5,7 @@ The source of randomness for this algorithm is \texttt{std::mt19937} which is Me
 Twister 19937 pseudo-random generator.
 Hash tables are stored in a \texttt{std::vector} of structures, each containing
 randomly generated hash constants and a \texttt{std::map} mapping
-metahash key (implemented by \texttt{uint64_t}) to \texttt{std::set} of vector indices.
+metahash key (implemented by \texttt{uint64\_t}) to \texttt{std::set} of vector indices.
 In order to calculate metahash, $K$ single hashes as described in chapter 2.3 are computed.
 Then, all these hashes are combined into one metahash key (\texttt{seed}) using an approach from
 \texttt{boost} library. Adding every hash value \texttt{v} to existing \texttt{seed} is done
