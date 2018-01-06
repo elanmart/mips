@@ -1,9 +1,24 @@
-% remove frame by commenting begin and end of tcolorbox
-\begin{tcolorbox}[colback=bg, left=0pt, right=0pt, top=0pt, bottom=0pt]
-\begin{minted}[bgcolor=bg]{c++}
-#include<stdio.h>
-int main(int argc, char **argv) {
-	return 0;
-}
-\end{minted}
-\end{tcolorbox}
+Vector hashing is parallelized with respect to hash tables --- entries are inserted in parallel
+into every hash table. It is accomplished by an OpenMP directive before the loop iterating through
+hash tables.
+The source of randomness for this algorithm is \texttt{std::mt19937} which is Mersenne
+Twister 19937 pseudo-random generator.
+Hash tables are stored in a \texttt{std::vector} of structures. Single instance of the structure
+contains random vector and scalar used for hashing and a \texttt{std::map} which points from
+metahash key (implemented by \texttt{unsigned long long}) to \texttt{std::set} of vector indices.
+In order to calculate metahash, $K$ single hashes as described in chapter 2.3 are computed.
+Then, all these hashes are combined into one metahash key (\texttt{seed}) using an approach from
+\texttt{boost} library. Adding every hash value \texttt{v} to existing \texttt{seed} is done
+by instruction containing a magic number:
+\begin{verbatim}
+seed ^= v + 0x9e3779b9 + (seed<<6) + (seed>>2);
+\end{verbatim}
+
+Answering queries is also carried out in parallel by OpenMP. It ensures high scalability in situations
+where many queries have to be answered at once. First, colliding vectors are found in all hash
+tables and placed in an \texttt{std::unordered\_set}. Next, exact inner product between query and
+the colliders is calculated by \path{faiss::fvec_inner_product} procedure from Faiss library.
+Such computed scores are saved in a \texttt{std::vector} of pairs --- vector index and its score.
+This vector of pairs is sorted by score and truncated to demanded size of $k$ best vectors in case
+there were more colliders than $k$. Finally, indices are written to resultant \texttt{FlatMatrix}
+and optionally supplmented by $-1$'s if less than $k$ colliding vectors were found.
