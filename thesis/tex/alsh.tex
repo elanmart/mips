@@ -13,7 +13,7 @@ It is assumed that meta-hash function is better suited to discover in what ways 
 resemble one another.
 After a vector is hashed by all $K$ functions, outputs taken together form a hash table key.
 An entry in hash table consists of key pointing to a set of vector indices for which the meta-hash function
-returned this exact key. In other words, vectors are placed in ,,buckets'' ---
+returned this exact key. In other words, vectors are placed in ``buckets'' ---
 every bucket represents one value of meta-hash and consequently contains similar vectors, where
 similarity is more precisely evaluated than one single hash function would evaluate.
 To allow even higher abstraction level, $L$ meta-hash functions can be used to create $L$ hash tables ---
@@ -125,8 +125,8 @@ $\bm{[1, 0, -1]}$ & $\bm{\{4\}}$ \\
 
 Before looking for vectors that match query $q$, it has to be hashed as well:
 \begin{gather*}
-H_{1,q} = [h_{1,1}(q), h_{2,1}(q), h_{3,1}(q)] = \textbf{[0, 1, 0]}\\
-H_{2,q} = [h_{1,2}(q), h_{2,2}(q), h_{3,2}(q)] = \textbf{[1, 0, -1]}
+H_{1,q} = [h_{1,1}(q), h_{2,1}(q), h_{3,1}(q)] = \bm{[0, 1, 0]} \\
+H_{2,q} = [h_{1,2}(q), h_{2,2}(q), h_{3,2}(q)] = \bm{[1, 0, -1]} \\
 \end{gather*}
 
 $H_{1,q}$ i $H_{2,q}$ are the keys with which one should look for vectors in first and second hash table respectively (printed in bold).
