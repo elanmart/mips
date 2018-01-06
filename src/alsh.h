@@ -3,6 +3,7 @@
 #include "faiss/Index.h"
 #include <map>
 #include <set>
+#include <cstdint>
 
 
 struct lsh_hash_t {
@@ -11,7 +12,7 @@ struct lsh_hash_t {
 };
 
 struct lsh_metahash_t {
-    typedef unsigned long long hash_t;
+    typedef uint64_t hash_t;
 
     std::vector<lsh_hash_t> hashes;
     std::map<hash_t, std::set<faiss::Index::idx_t> > table;
