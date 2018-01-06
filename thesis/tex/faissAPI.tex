@@ -26,7 +26,7 @@ for example we heavily reuse their fast inner product routines.
 A couple of provided routines for fast vector operations, such as inner product calculation, can
 operate in batch mode to increase speed. Vectors to be used in calculation are then concatenated
 to a contiguous array --- this makes sense, as it increases memory locality in comparison
-to ``vector of vector'' way, where pointer indirection would be involved. Using such a data structure
+to ``vector of vectors'' way, where pointer indirection would be involved. Using such a data structure
 is quite error prone though, as one has to manually calculate offsets into the array. To improve
 usability, we abstracted it to a \texttt{FlatMatrix} structure, which provides matrix-like API, while
 still storing data in single array. The underlying data storage is also accessible through a method,

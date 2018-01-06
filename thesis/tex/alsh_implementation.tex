@@ -3,9 +3,9 @@ into every hash table. It is accomplished by an OpenMP directive before the loop
 hash tables.
 The source of randomness for this algorithm is \texttt{std::mt19937} which is Mersenne
 Twister 19937 pseudo-random generator.
-Hash tables are stored in a \texttt{std::vector} of structures. Single instance of the structure
-contains random vector and scalar used for hashing and a \texttt{std::map} which points from
-metahash key (implemented by \texttt{unsigned long long}) to \texttt{std::set} of vector indices.
+Hash tables are stored in a \texttt{std::vector} of structures, each containing
+randomly generated hash constants and a \texttt{std::map} mapping
+metahash key (implemented by \texttt{uint64_t}) to \texttt{std::set} of vector indices.
 In order to calculate metahash, $K$ single hashes as described in chapter 2.3 are computed.
 Then, all these hashes are combined into one metahash key (\texttt{seed}) using an approach from
 \texttt{boost} library. Adding every hash value \texttt{v} to existing \texttt{seed} is done
@@ -20,5 +20,6 @@ tables and placed in an \texttt{std::unordered\_set}. Next, exact inner product 
 the colliders is calculated by \path{faiss::fvec_inner_product} procedure from Faiss library.
 Such computed scores are saved in a \texttt{std::vector} of pairs --- vector index and its score.
 This vector of pairs is sorted by score and truncated to demanded size of $k$ best vectors in case
-there were more colliders than $k$. Finally, indices are written to resultant \texttt{FlatMatrix}
-and optionally supplmented by $-1$'s if less than $k$ colliding vectors were found.
+there were more colliders than $k$. Finally, indices are written to resultant \texttt{FlatMatrix}.
+If less than $k$ vectors collided, remaining fields are filled with $-1$'s as required by
+Faiss API.
