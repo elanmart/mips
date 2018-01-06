@@ -5,7 +5,7 @@ The source of randomness for this algorithm is \texttt{std::mt19937} which is Me
 Twister 19937 pseudo-random generator.
 Hash tables are stored in a \texttt{std::vector} of structures, each containing
 randomly generated hash constants and a \texttt{std::map} mapping
-metahash key (implemented by \texttt{uint64_t}) to \texttt{std::set} of vector indices.
+metahash key (implemented by \texttt{uint64\_t}) to \texttt{std::set} of vector indices.
 In order to calculate metahash, $K$ single hashes as described in chapter 2.3 are computed.
 Then, all these hashes are combined into one metahash key (\texttt{seed}) using an approach from
 \texttt{boost} library. Adding every hash value \texttt{v} to existing \texttt{seed} is done
@@ -16,10 +16,10 @@ seed ^= v + 0x9e3779b9 + (seed<<6) + (seed>>2);
 
 Answering queries is also carried out in parallel by OpenMP. It ensures high scalability in situations
 where many queries have to be answered at once. First, colliding vectors are found in all hash
-tables and placed in an \texttt{std::unordered\_set}. Next, exact inner product between query and
-the colliders is calculated by \path{faiss::fvec_inner_product} procedure from Faiss library.
-Such computed scores are saved in a \texttt{std::vector} of pairs --- vector index and its score.
-This vector of pairs is sorted by score and truncated to demanded size of $k$ best vectors in case
-there were more colliders than $k$. Finally, indices are written to resultant \texttt{FlatMatrix}.
+tables and placed in an \texttt{std::unordered\_set}. Next, exact inner product (vector's score)
+between query and the colliders is calculated by \path{faiss::fvec_inner_product} procedure from Faiss library.
+Score processing is identical as in quantization, except best vectors are not returned but
+written to resultant \texttt{FlatMatrix}. Truncation is necessary only in case there were more
+colliders than $k$.
 If less than $k$ vectors collided, remaining fields are filled with $-1$'s as required by
 Faiss API.
