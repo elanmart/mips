@@ -5,10 +5,11 @@ divisible by required number of subspaces --- if it happens, the last subspace h
 Data is then accordingly copied to elements of mentioned \texttt{std::vector}.
 Subsequently, the same flat $k$-means procedure which forms the base of hierarchical $k$-means
 is performed on every subspace. It returns the most important part of index:
-a structure comprising of \texttt{FlatMatrix} to store centroids and a \texttt{std::vector} containing assignments.
+a structure comprising of \texttt{FlatMatrix} to store centroids and a \texttt{std::vector}
+containing assignments of points to centroids.
 
 Before searching the index, queries are likewise loaded to \texttt{FlatMatrix}, permuted and divided into subspaces.
-Queries can be processed in parallel.
+Each query is then processed in parallel.
 Prediction method operates on two vectors created before, having size equal to number of subspaces:
 vector of sets of query parts and a vector of sets of $k$-means centroids for every subspace.
 Next, another \texttt{FlatMatrix} of inner products between query parts and $k$-means centroids

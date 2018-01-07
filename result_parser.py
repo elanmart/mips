@@ -22,6 +22,9 @@ colors = {
     "Flat": "c",
     "IVF": "g",
     "KMeans": "r",
+    "KMeans-1": "r",
+    "KMeans-2": "m",
+    "KMeans-3": "b",
     "Alsh": "b",
     "Quant": "y",
 }
@@ -151,21 +154,58 @@ def draw_nondominated(nondominated, name, step = True):
                 t = [k[0]["test"] / baseline_time for k in graph_data[i]]
                 prec = [k[0][p] for k in graph_data[i]]
                 if step:
-                    lines.append(plt.step(t, prec, label = i, marker = ".", where = "post", color = colors[i])[0])
+                    lines.append(plt.step(t, prec, label = i, where = "post", color = colors[i])[0])
                 else:
                     lines.append(plt.plot(t, prec, colors[i] + ".", label = i, marker = ".")[0])
             plt.legend(handles = lines)
-            maxt = {"Amazon-3M": 0.1, "sift": 0.5, "siftsmall": 0.04, "WikiLSHTC": 0.5}
+            maxt = {"Amazon-3M": 0.1, "sift": 0.5, "siftsmall": 0.04, "WikiLSHTC": 0.2}
             maxt = maxt[d]
             plt.xlim(0, maxt)
+            plt.ylim(ymin = 0)
             plt.ylabel("Precision")
             plt.xlabel("Fraction of brute force time")
-            plt.title("%s, top-%s search" % (d, p[1:]))
-            plt.savefig("graphs/%s/%s-%s.svg" % (name, d, p))
+            plt.title(d)
+            plt.savefig("graphs/%s/%s-%s.eps" % (name, d, p))
+            plt.savefig("graphs/%s/%s-%s.png" % (name, d, p))
+
+
+def vary(results, dataset, p, index, params, what, values):
+    data = results[(index, dataset)]
+    plt.clf()
+    arr = []
+    xs = []
+    print(next(iter(data)))
+    for val in values:
+        pr = params._replace(**{what: val})
+        try:
+            arr.append(data[pr]["test"])
+            xs.append(float(val))
+        except KeyError:
+            pass
+    print(xs, arr)
+    plt.plot(xs, arr)
+    plt.xscale("log")
+    plt.title("%s query time on %s dataset" % (index, index))
+    plt.ylabel("seconds")
+    plt.xlabel(what)
+    plt.savefig("graphs/vary/%s-%s-%s-%s.eps" % (dataset, index, p, what))
+    plt.savefig("graphs/vary/%s-%s-%s-%s.png" % (dataset, index, p, what))
+
+
+def split_kmeans(results):
+    km = defaultdict(dict)
+    for index, dataset in results:
+        if index in ["Flat", "IVF"]:
+            km[(index, dataset)] = results[(index, dataset)]
+        if index != "KMeans": continue
+        data = results[(index, dataset)]
+        for k in data:
+            km[("KMeans-%s" % k.layers, dataset)][k] = data[k]
+    return km
 
 
 def make_dirs():
-    for d in ["nondominated", "almost-nondominated"]:
+    for d in ["nondominated", "almost-nondominated", "nondominated-km", "almost-nondominated-km", "vary"]:
         try:
             os.makedirs("graphs/" + d)
         except OSError:
@@ -175,15 +215,25 @@ def make_dirs():
 def main():
     make_dirs()
     results = parse_csv("results/results-2018-01-02--19_50.csv")
+    results_km = split_kmeans(results)
     nondominated = get_all_nondominated(results)
+    nondominated_km = get_all_nondominated(results_km)
     almost = get_almost_nondominated(results, nondominated)
+    almost_km = get_almost_nondominated(results_km, nondominated_km)
     draw_nondominated(nondominated, "nondominated")
-    draw_nondominated(almost, "almost-nondominated", False)
+    #draw_nondominated(almost, "almost-nondominated", False)
+    draw_nondominated(nondominated_km, "nondominated-km")
+    #draw_nondominated(almost_km, "almost-nondominated-km", False)
 
     indexes = sorted({k[0] for k in nondominated.keys()})
     datasets = sorted({k[1] for k in nondominated.keys()})
     precisions = sorted({k[2] for k in nondominated.keys()})
 
+    vary(results, "sift", "p25", "KMeans", parameter_tuples["KMeans"](U = "0.85",
+        layers = "3", m = "0", nprobe = "32", nprobe_test = 64, spherical = "False", bnb = "False"),
+        "nprobe", [str(s) for s in [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]])
+
+    return
     for i in indexes:
         for d in datasets:
             print("\n\n%s, %s\n\n" % (i, d))
