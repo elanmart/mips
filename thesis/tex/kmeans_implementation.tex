@@ -28,7 +28,7 @@ Thus, we could precompute distances of each centroid $c$ to each of its children
 and then only try to compute inner product $q \cdot x$ if there is a chance for 
 it to exceed the worst candidate so far. In practice however, we found that this
 optimization was not very useful --- one of the reasons could be the high space
-dimensionality causing most centroid-child distances to be relatively large \footnote{
+dimensionality causing most centroid-child distances to be relatively large\footnote{
 Centroid's children can be modeled as random points in hyperball centered on the
 centroid. Somewhat counterintuitively, for large number of dimensions, 
 most of its hypervolume is near its boundary, meaning the average distance of point

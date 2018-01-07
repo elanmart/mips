@@ -40,8 +40,8 @@ than the alternatives. ALSH algorithm gave very poor results on Amazon-3M and Wi
 datasets --- apparently sift vectors have some regularity that ALSH could exploit better.
 Still, the precision did not exceed approximately $0.60$ for reasonable speedups even on
 this dataset. Finally, the quantization-based algorithm, although it was able to give
-reasonable precision, it was so slow, that the only dataset it did not time out
-\footnote{Timeout was set to twice the time of brute force search.}
+reasonable precision, it was so slow, that the only dataset it did not time 
+out\footnote{Timeout was set to twice the time of brute force search.}
 was siftsmall dataset. It contained only ten thousand vectors though and was included
 just for completion.
 
@@ -70,7 +70,7 @@ number of layers (for example, KMeans-2 has two layers).
 From these graphs, we can see that in general IVF is approximately $30\% - 50\%$ faster
 (on horizontal axis) than K-Means when using just a single layer. Both algorithms are 
 equivalent in this case, so this means Faiss library is more optimized for this parameter 
-choice \footnote{
+choice\footnote{
 Checking its source we can see it performs inner products of each query with all centroids
 (from the first and only layer) all at once, before continuing to answer each query 
 using its candidates. This allows one to use heavily optimized matrix-matrix multiplication
@@ -92,8 +92,8 @@ IVF cannot even reach this speed. In a sense, its accuracy is zero there.
 A possible explanation for this cutoff comes from its complexity analysis as described
 in introduction to K-Means algorithm chapter. No matter what precision is, the minimal
 complexity of flat K-Means (equivalent to IVF) is $O(\sqrt{N})$. Two- or three-layer
-K-Means bring this limit down to $O(\sqrt[3]{N})$, or $O(\sqrt[4]{N})$ respectively
-\footnote{Admittedly with a small multiplicative slowdown.}.
+K-Means bring this limit down to $O(\sqrt[3]{N})$, or $O(\sqrt[4]{N})$ 
+respectively\footnote{Admittedly with a small multiplicative slowdown.}.
 
 TODO: table with nondominated parameters, additional analysis
 
