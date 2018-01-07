@@ -1,6 +1,7 @@
 [Marcin: Write about Amazon etc. here]
 
 % also write about what "precision" exactly means (intersection etc.)
+% write what parameters we toggle for each algo
 
 % also write what IVF is (Inverted File, from Faiss, hierarchical K-Means with 1 layer)
 % and state that it is for benchmark comparison
@@ -84,7 +85,8 @@ it, especially for Amazon-3M dataset.
 
 The difference between two-layer K-Means and three-layer ones is not as amplified. Since
 training time (not pictured here) usually rises quite significantly with number of layers,
-the minor additional speedup may not be worth it in practice.
+the minor additional speedup may not be worth it in practice. Four and more layers
+would probably not have noticable impact either.
 
 It is also notable that two- and three-layer K-Means curves continue much further left
 than IVF. Of course, such quick results come with significant impact on accuracy, but

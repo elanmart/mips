@@ -77,11 +77,21 @@ algorithm, including the querying phase. Parameters specific to this algorithm a
 \end{algorithm}
 
 Vector multiplication is regarded as an elementary operation.
-The hash function we use does not do much more than that (except one addition, one division and one rounding),
+The hash function we use does not do much more than that (except one addition,
+one division and one rounding),
 so whole hash function can be treated as elementary operation.
-The index construction phase has complexity of $O(n \cdot K \cdot L)$, because every of $n$ database vectors
+The index construction phase has complexity of $O(n \cdot K \cdot L)$,
+because every of $n$ database vectors
 has to be hashed $K$ times in every of $L$ hash tables.
-The querying phase has complexity of $O(K \cdot L)$ because the query must be hashed $K$ times in $L$ hash tables.
+The querying phase complexity is hard to estimate, since it is data-dependent.
+The lower bound is $\Omega(K \cdot L)$, as this is the number of hashes to be
+calculated. Adding results to set can potentially take $O(n)$ time in worst
+case, if every vector collides with query. This is an unlikely scenario if
+hashing function is chosen properly. The pseudocode as written returns a set
+of candidates --- if we want to get top-K of them, we need to calculate exact
+inner product of query with each of them --- this again can take up to
+$O(n)$ time. Careful choosing of $K$ and $L$ constants may avoid the issue
+by making collisions only reasaonably frequent.
 
 
 \subsubsection*{Example}
