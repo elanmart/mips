@@ -28,6 +28,7 @@ colors = {
     "Alsh": "b",
     "Quant": "y",
 }
+maxt = {"Amazon-3M": 0.1, "sift": 0.5, "siftsmall": 0.04, "WikiLSHTC": 0.2}
 
 def add(results, row):
     if row["status"] == "FAIL":
@@ -70,7 +71,7 @@ def parse_csv(name):
             for t in tests:
                 row2 = row.copy()
                 row2["nprobe_test"] = t
-                for k in row2:
+                for k in list(row2.keys()):
                     if k.endswith("-%05d" % t):
                         k2 = k[:k.rfind("-")]
                         row2[k2] = row2[k]
@@ -158,9 +159,8 @@ def draw_nondominated(nondominated, name, step = True):
                 else:
                     lines.append(plt.plot(t, prec, colors[i] + ".", label = i, marker = ".")[0])
             plt.legend(handles = lines)
-            maxt = {"Amazon-3M": 0.1, "sift": 0.5, "siftsmall": 0.04, "WikiLSHTC": 0.2}
-            maxt = maxt[d]
-            plt.xlim(0, maxt)
+            maxtx = maxt[d]
+            plt.xlim(0, maxtx)
             plt.ylim(ymin = 0)
             plt.ylabel("Precision")
             plt.xlabel("Fraction of brute force time")
@@ -205,7 +205,7 @@ def split_kmeans(results):
 
 
 def make_dirs():
-    for d in ["nondominated", "almost-nondominated", "nondominated-km", "almost-nondominated-km", "vary"]:
+    for d in ["nondominated", "almost-nondominated", "nondominated-km", "almost-nondominated-km", "vary", "kmeans-specific"]:
         try:
             os.makedirs("graphs/" + d)
         except OSError:
@@ -229,17 +229,86 @@ def main():
     datasets = sorted({k[1] for k in nondominated.keys()})
     precisions = sorted({k[2] for k in nondominated.keys()})
 
-    vary(results, "sift", "p25", "KMeans", parameter_tuples["KMeans"](U = "0.85",
-        layers = "3", m = "0", nprobe = "32", nprobe_test = 64, spherical = "False", bnb = "False"),
-        "nprobe", [str(s) for s in [2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096]])
+    results2 = parse_csv("results/results-2018-01-08--19_51.csv")
+    paramx = [
+        ("sift", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "3", m = "0", spherical = "True", nprobe = "32", 
+            nprobe_test = 64)),
+        ("sift", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "2", m = "0", spherical = "True", nprobe = "32", 
+            nprobe_test = 64)),
+        ("sift", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "1", m = "5", spherical = "True", nprobe = "32", 
+            nprobe_test = 64)),
+        ("Amazon-3M", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "3", m = "0", spherical = "False", nprobe = "32", 
+            nprobe_test = 64)),
+        ("Amazon-3M", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "2", m = "0", spherical = "False", nprobe = "32", 
+            nprobe_test = 64)),
+        ("Amazon-3M", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "1", m = "5", spherical = "True", nprobe = "32", 
+            nprobe_test = 64)),
+        ("WikiLSHTC", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "3", m = "0", spherical = "False", nprobe = "32", 
+            nprobe_test = 64)),
+        ("WikiLSHTC", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "2", m = "0", spherical = "False", nprobe = "32", 
+            nprobe_test = 64)),
+        ("WikiLSHTC", parameter_tuples["KMeans"](U = "0.85", bnb = "False",
+            layers = "1", m = "0", spherical = "True", nprobe = "32", 
+            nprobe_test = 64)),
+    ]
+    #nprobes = [1, 2, 3, 4, 5, 10, 20, 30, 40, 50, 60, 80, 100, 120, 140, 160, 190, 220, 250]
+    nprobes = [1, 5, 30, 100]
+    tests = [1, 2, 3, 4, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 175, 190, 205, 220, 240, 260, 280, 300, 320, 340, 360, 380, 400, 420, 440, 460, 480, 500]
+    for ds, par in paramx:
+        print(ds, par.layers)
+        lines = []
+        arrx = []
+        plt.clf()
+        maxp = list(results[("Flat", ds)].values())[0]["p100"]
+        for np in nprobes:
+            arr = []
+            for npt in tests:
+                try:
+                    params = par._replace(**{"nprobe": str(np)})._replace(**{"nprobe_test": npt})
+                    res = results2[("KMeans", ds)]
+                    res = res[params]
+                    arr.append((res["p100"], npt, 
+                        res["test"] / list(results[("Flat", ds)].values())[0]["test"]))
+                except Exception:
+                    pass
+            arrx.append(arr)
+            arr = sorted(arr, key = lambda x: x[2])
+            arr2 = []
+            best = -1e9
+            for a in arr:
+                if a[0] > best:
+                    best = a[0]
+                    arr2.append(a)
+            lines.append(plt.step([x[2] for x in arr2], [x[0] for x in arr2], label = "nprobe = %s" % np)[0])
+        plt.legend(handles = lines)
+        plt.ylabel("Precision")
+        plt.xlabel("Fraction of brute force time")
+        plt.xlim(0, maxt[ds])
+        plt.ylim(0, maxp * 1.1)
+        plt.title("%s-layer K-Means, %s" % (par.layers, ds))
+        plt.savefig("graphs/kmeans-specific/time-prec-%s-%s.eps" % (ds, par.layers))
+        plt.savefig("graphs/kmeans-specific/time-prec-%s-%s.png" % (ds, par.layers))
 
-    return
-    for i in indexes:
-        for d in datasets:
-            print("\n\n%s, %s\n\n" % (i, d))
-            for row, params in almost[(i, d, "p5")]:
-                print(row["test"], row["p5"], params)
-
+        plt.clf()
+        lines = []
+        for arr, np in zip(arrx, nprobes):
+            lines.append(plt.step([x[1] for x in arr], [x[0] for x in arr], label = "nprobe = %s" % np)[0])
+        plt.legend(handles = lines)
+        plt.xlabel("nprobe_test")
+        plt.ylabel("Precision")
+        plt.xlim(0, 110)
+        plt.ylim(0, maxp * 1.1)
+        plt.title("%s-layer K-Means, %s" % (par.layers, ds))
+        plt.savefig("graphs/kmeans-specific/test-prec-%s-%s.eps" % (ds, par.layers))
+        plt.savefig("graphs/kmeans-specific/test-prec-%s-%s.png" % (ds, par.layers))
 
 if __name__ == "__main__":
     main()
