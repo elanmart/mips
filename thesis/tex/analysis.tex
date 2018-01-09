@@ -15,8 +15,10 @@ parameter choice that gives results that are better in both query time and preci
 
 Algorithms were always called with request for top 100 vectors, but we recorded
 precision at a couple of points: 1, 5, 25 and 100. It turns out the precision vs time
-plots are very similar for each of those values - so to save space, we only show
+plots are very similar for each of those values --- to save space, we only show
 graphs for precision at 100.
+
+% TODO trochę mały font w wykresach
 
 \begin{figure}[H]
 	\centering
@@ -36,7 +38,7 @@ graphs for precision at 100.
 \caption{Pareto frontiers for each algorithm.}
 \end{figure}
 
-The graphs show some similarity - in all cases K-Means and IVF algorithms were much better
+The graphs show some similarity --- in all cases $K$-Means and IVF algorithms were much better
 than the alternatives. ALSH algorithm gave very poor results on Amazon-3M and Wiki-LSHTC
 datasets --- apparently sift vectors have some regularity that ALSH could exploit better.
 Still, the precision did not exceed approximately $0.60$ for reasonable speedups even on
@@ -46,13 +48,14 @@ out\footnote{Timeout was set to twice the time of brute force search.}
 was siftsmall dataset. It contained only ten thousand vectors though and was included
 just for completion.
 
-IVF and K-Means curves follow each other quite closely --- it could be expected though,
-since K-Means algorithm is generalization of IVF. In almost all places K-Means are even
+IVF and $K$-Means curves follow each other quite closely --- it could be expected though,
+since $K$-Means algorithm is generalization of IVF. In almost all places $K$-Means are even
 better than IVF --- again, this can be explained by having more parameters to be tested.
 To check whether this is caused by possibly faster implementation or the introduction of
-hierarchy, we split K-Means curve into three lines, each corresponding to a single
+hierarchy, we split $K$-Means curve into three lines, each corresponding to a single
 number of layers (for example, KMeans-2 has two layers).
 
+% TODO jak wyżej - zwiększyć font na wykresach
 \begin{figure}[H]
 	\centering
 	\subfloat{
@@ -69,7 +72,7 @@ number of layers (for example, KMeans-2 has two layers).
 \end{figure}
 
 From these graphs, we can see that in general IVF is approximately $30\% - 50\%$ faster
-(on horizontal axis) than K-Means when using just a single layer. Both algorithms are 
+(on horizontal axis) than $K$-Means when using just a single layer. Both algorithms are
 equivalent in this case, so this means Faiss library is more optimized for this parameter 
 choice\footnote{
 Checking its source we can see it performs inner products of each query with all centroids
@@ -77,27 +80,25 @@ Checking its source we can see it performs inner products of each query with all
 using its candidates. This allows one to use heavily optimized matrix-matrix multiplication
 routines for the first phase, with additional memory locality advantages. 
 In principle, this optimization
-could be implemented for hierarchical K-Means as well (for the first layer only).
+could be implemented for hierarchical $K$-Means as well (for the first layer only).
 }.
-In contrast, K-Means are much better when allowed to use two or three layers. Addition
+In contrast, $K$-Means are much better when allowed to use two or three layers. Addition
 of hierarchy speeds calculation to the level of IVF --- for some parameters even surpassing
 it, especially for Amazon-3M dataset.
 
-The difference between two-layer K-Means and three-layer ones is not as amplified. Since
+The difference between two-layer $K$-Means and three-layer ones is not as amplified. Since
 training time (not pictured here) usually rises quite significantly with number of layers,
 the minor additional speedup may not be worth it in practice. Four and more layers
 would probably not have noticable impact either.
 
-It is also notable that two- and three-layer K-Means curves continue much further left
+It is also notable that two- and three-layer $K$-Means curves continue much further left
 than IVF. Of course, such quick results come with significant impact on accuracy, but
 IVF cannot even reach this speed. In a sense, its accuracy is zero there.
 A possible explanation for this cutoff comes from its complexity analysis as described
-in introduction to K-Means algorithm chapter. No matter what precision is, the minimal
-complexity of flat K-Means (equivalent to IVF) is $O(\sqrt{N})$. Two- or three-layer
-K-Means bring this limit down to $O(\sqrt[3]{N})$, or $O(\sqrt[4]{N})$ 
+in introduction to $K$-Means algorithm chapter. No matter what precision is, the minimal
+complexity of flat $K$-Means (equivalent to IVF) is $O(\sqrt{N})$. Two- or three-layer
+$K$-Means bring this limit down to $O(\sqrt[3]{N})$, or $O(\sqrt[4]{N})$
 respectively\footnote{Admittedly with a small multiplicative slowdown.}.
 
 TODO: table with nondominated parameters, additional analysis
-
-
-
+\newpage

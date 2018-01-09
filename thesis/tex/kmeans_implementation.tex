@@ -2,17 +2,17 @@ Structure implementing this algorithm contains mostly the hierarchical clusterin
 Since most of the querying time is spent walking through this tree, effort has been made
 to optimize it.
 
-Centroids are stored as a $std::vector$ of layer structures. Layer number $0$ corresponds
-to original data vectors, $1$ - bottom clusters, and so on. Each layer structure contains
-$FlatMatrix$ of points making this layer, and for each of them, a way of referring to
-its children. In first implementation, this was simply a $std::vector$ of indices into
+Centroids are stored as a \texttt{std::vector} of layer structures. Layer number $0$ corresponds
+to original data vectors, $1$ --- bottom clusters, and so on. Each layer structure contains
+\texttt{FlatMatrix} of points making this layer, and for each of them, a way of referring to
+its children. In first implementation, this was simply a \texttt{std::vector} of indices into
 the lower layer. This was however found to have significant impact on memory performance,
 since children could have many gaps of arbitrary size in between (for example, centroid
 $1$'s children could be points $1$, $8$ and $13$). To improve cache-friendliness, after
 calculating centroid positions and children assignments, the children array itself was 
 reordered in such a way, that any given centroid's children are contiguous. In the example
 given above, that could mean renaming point $8$ to $2$ and $13$ to $3$. This single
-optimization was found to speed computation approximately twice.
+optimization was found to speed computation up approximately twice.
 
 As for querying implementation, the algorithm is mostly direct translation of pseudocode
 described in theoretical part of the thesis. The only significant modification is 
