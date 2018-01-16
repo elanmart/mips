@@ -1,10 +1,66 @@
-[Marcin: Write about Amazon etc. here]
 
-% also write about what "precision" exactly means (intersection etc.)
-% write what parameters we toggle for each algo
+\subsection{Conducting the experiments}
 
-% also write what IVF is (Inverted File, from Faiss, hierarchical K-Means with 1 layer)
-% and state that it is for benchmark comparison
+    We've conducted extensive experiments to evaluate performance of our algorithms. We've used
+    four different datasets, described in detail in section~\ref{sec:datasets}, and compared
+    our implementation with a highly-optimized, open source \texttt{FAISS} library released by
+    \texttt{Facebook AI Research} group.
+
+    \subsubsection{Evaluation metrics}
+
+        We have compared the algorithms according to two metrics -- \texttt{test-time}
+        and \texttt{precision@}$k$.
+
+        \texttt{Test-time} is defined simply as a number of seconds it takes the index to return
+        top-$100$ (approximate) nearest neighbours for each vector in a set of queries provided by the user.
+        We assume that queries are available as a contiguous chunk of data kept in-memory.
+
+        \texttt{Precision-@}$k$ can be intuitively described as a
+        \textit{"number of relevant items in the list of $k$ returned items, divided by $k$".}
+
+        More formally, given a vector of scores assigned to each item $\hat{\mathbf y} \in {\cal{R}}^{L}$, and a
+        binary vector indicating which items are relevant $\mathbf y \in \left\lbrace 0, 1 \right\rbrace^L$
+        we can write
+
+        \begin{equation}
+            \text{P}@k := \frac{1}{k} \sum_{l\in \text{rank}_k (\hat{\mathbf y})} \mathbf y_l
+        \end{equation}
+
+        where $\text{rank}_k(\mathbf y)$ returns the $k$ largest indices of $y$ ranked in descending order.
+
+        We have decided not to focus on the training time of the evaluated indices. This
+        descision is motivated by the fact, that in most practical use-cases, where
+        approximate inference methods will be used, the training time is a one-time cost that
+        often can be amortized (e.g by using more compute-power).
+        Inference in these cases, however, is the time-sensitive component
+        that cannot be easily sped-up (e.g the inference happens on a mobile device, or a small web-server).
+
+    \subsubsection{Datasets}\label{sec:datasets}
+
+        We have used four datasets to evaluate performance of our algorithms.
+
+        % TODO(elanmart): get proper references from http://corpus-texmex.irisa.fr/
+        Two of them, \texttt{SIFT} and \texttt{SIFTsmall} were introduced in $[ref]$ and their
+        main purpose was to allow for evaluation of (approximate) \texttt{knn} algorithms.
+
+        For these datasets a set of $n$ "databse" vectors is given with dimensionality
+        $d=128$, as well as a set of "query" vectors $\in \cal{R}^d$
+        and the "groundtruth" indices. For every "query" vector there are 100 "groundtruth" indices
+        that point to the closest (according to L2 distance) vectors in the database.
+
+        First of all, for every query, we consider only the first vector in the groundtruth as relevant.
+        Secondly, we recompute the groundtruth indices so that they're sorted accroding to inner-product
+        metric.
+
+
+
+    \subsubsection{Parameter grid}
+
+
+    \subsubsection{Baseline (IVF)}
+
+
+    \subsubsection{Amazon}
 
 \subsection{Analysis of results}
 
@@ -43,8 +99,10 @@ than the alternatives. ALSH algorithm gave very poor results on Amazon-3M and Wi
 datasets --- apparently sift vectors have some regularity that ALSH could exploit better.
 Still, the precision did not exceed approximately $0.60$ for reasonable speedups even on
 this dataset. Finally, the quantization-based algorithm, although it was able to give
-reasonable precision, it was so slow, that the only dataset it did not time 
-out\footnote{Timeout was set to twice the time of brute force search.}
+reasonable precision, it was so slow, that the only dataset it did not time
+out\footnote{
+    Timeout was set to twice the time of brute force search.
+}
 was siftsmall dataset. It contained only ten thousand vectors though and was included
 just for completion.
 
@@ -73,14 +131,14 @@ number of layers (for example, KMeans-2 has two layers).
 
 From these graphs, we can see that in general IVF is approximately $30\% - 50\%$ faster
 (on horizontal axis) than $K$-Means when using just a single layer. Both algorithms are
-equivalent in this case, so this means Faiss library is more optimized for this parameter 
+equivalent in this case, so this means Faiss library is more optimized for this parameter
 choice\footnote{
-Checking its source we can see it performs inner products of each query with all centroids
-(from the first and only layer) all at once, before continuing to answer each query 
-using its candidates. This allows one to use heavily optimized matrix-matrix multiplication
-routines for the first phase, with additional memory locality advantages. 
-In principle, this optimization
-could be implemented for hierarchical $K$-Means as well (for the first layer only).
+    Checking its source we can see it performs inner products of each query with all centroids
+    (from the first and only layer) all at once, before continuing to answer each query
+    using its candidates. This allows one to use heavily optimized matrix-matrix multiplication
+    routines for the first phase, with additional memory locality advantages.
+    In principle, this optimization
+    could be implemen`ted for hierarchical $K$-Means as well (for the first layer only).
 }.
 In contrast, $K$-Means are much better when allowed to use two or three layers. Addition
 of hierarchy speeds calculation to the level of IVF --- for some parameters even surpassing
@@ -96,9 +154,11 @@ than IVF. Of course, such quick results come with significant impact on accuracy
 IVF cannot even reach this speed. In a sense, its accuracy is zero there.
 A possible explanation for this cutoff comes from its complexity analysis as described
 in introduction to $K$-Means algorithm chapter. No matter what precision is, the minimal
-complexity of flat $K$-Means (equivalent to IVF) is $O(\sqrt{N})$. Two- or three-layer
-$K$-Means bring this limit down to $O(\sqrt[3]{N})$, or $O(\sqrt[4]{N})$
-respectively\footnote{Admittedly with a small multiplicative slowdown.}.
+complexity of flat $K$-Means (equivalent to IVF) is $ O \left( \sqrt{N} \right )$.
+Two- or three-layer $K$-Means bring this limit down to $ O \left( \sqrt[3]{N} \right) $,
+or $ O \left( \sqrt[4]{N} \right) $ respectively\footnote{
+    Admittedly with a small multiplicative slowdown.
+}.
 
 TODO: table with nondominated parameters, additional analysis
 \newpage
