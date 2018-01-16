@@ -5,7 +5,6 @@
 #include <cstdlib>
 #include <string>
 
-
 template <typename T>
 struct FlatMatrix {
     std::vector<T> data;
@@ -36,6 +35,24 @@ struct kmeans_result {
 };
 
 kmeans_result perform_kmeans(const FloatMatrix& matrix, size_t k, bool spherical);
+
+void write_floatmatrix(const FloatMatrix& mat, FILE* f);
+
+template <typename T>
+void write_vec(const std::vector<T>& vec, FILE* f) {
+    size_t cnt = vec.size();
+    fwrite(&cnt, sizeof(cnt), 1, f);
+    fwrite(vec.data(), sizeof(T), vec.size(), f);
+}
+void read_floatmatrix(FloatMatrix& mat, FILE* f);
+
+template <typename T>
+void read_vec(std::vector<T>& vec, FILE* f) {
+    size_t cnt;
+    fread(&cnt, sizeof(cnt), 1, f);
+    vec.resize(cnt);
+    fread(vec.data(), sizeof(T), vec.size(), f);
+}
 
 
 void scale(float* vec, float alpha, size_t size);

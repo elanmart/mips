@@ -28,6 +28,8 @@ struct IndexALSH: public faiss::Index {
     std::vector<lsh_metahash_t> metahashes;
     FloatMatrix data_matrix;
 
+    void save(const char* fname) const;
+    void load(const char* fname);
     
     // Parameters:
     size_t L;
@@ -40,4 +42,6 @@ struct IndexALSH: public faiss::Index {
     int dot_product_hash(const float* a, const float* x, const float b) const;
     std::vector<idx_t> answer_query(float *query, size_t k_needed = 1) const;
     lsh_metahash_t::hash_t calculate_metahash(size_t l, const float* data) const;
+
+
 };

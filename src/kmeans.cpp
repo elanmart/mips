@@ -207,20 +207,6 @@ void IndexHierarchicKmeans::search(idx_t n, const float* data, idx_t k,
     }
 }
 
-static void write_floatmatrix(const FloatMatrix& mat, FILE* f) {
-    fwrite(&mat.vector_length, sizeof(mat.vector_length), 1, f);
-    auto cnt = mat.vector_count();
-    fwrite(&cnt, sizeof(cnt), 1, f);
-    fwrite(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
-}
-
-template <typename T>
-static void write_vec(const vector<T>& vec, FILE* f) {
-    size_t cnt = vec.size();
-    fwrite(&cnt, sizeof(cnt), 1, f);
-    fwrite(vec.data(), sizeof(T), vec.size(), f);
-}
-
 void IndexHierarchicKmeans::save(const char* fname) const {
     FILE* f = fopen(fname, "wb");
     write_floatmatrix(vectors_original, f);
@@ -230,23 +216,6 @@ void IndexHierarchicKmeans::save(const char* fname) const {
         write_floatmatrix(l.points, f);
     }
     fclose(f);
-}
-
-
-static void read_floatmatrix(FloatMatrix& mat, FILE* f) {
-    size_t len, cnt;
-    fread(&len, sizeof(len), 1, f);
-    fread(&cnt, sizeof(cnt), 1, f);
-    mat.resize(cnt, len);
-    fread(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
-}
-
-template <typename T>
-static void read_vec(vector<T>& vec, FILE* f) {
-    size_t cnt;
-    fread(&cnt, sizeof(cnt), 1, f);
-    vec.resize(cnt);
-    fread(vec.data(), sizeof(T), vec.size(), f);
 }
 
 void IndexHierarchicKmeans::load(const char* fname) {

@@ -153,3 +153,18 @@ FloatMatrix MipsAugmentationNone::extend(const float* data, size_t nvecs) {
 FloatMatrix MipsAugmentationNone::extend_queries(const float* data, size_t nvecs) {
     return generic_extend_queries(data, nvecs, dim, m);
 }
+
+void write_floatmatrix(const FloatMatrix& mat, FILE* f) {
+    fwrite(&mat.vector_length, sizeof(mat.vector_length), 1, f);
+    auto cnt = mat.vector_count();
+    fwrite(&cnt, sizeof(cnt), 1, f);
+    fwrite(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
+}
+
+void read_floatmatrix(FloatMatrix& mat, FILE* f) {
+    size_t len, cnt;
+    fread(&len, sizeof(len), 1, f);
+    fread(&cnt, sizeof(cnt), 1, f);
+    mat.resize(cnt, len);
+    fread(mat.data.data(), sizeof(mat.data[0]), mat.data.size(), f);
+}
