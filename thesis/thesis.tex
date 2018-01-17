@@ -1,104 +1,103 @@
-\documentclass[12pt]{article}
-\usepackage{indentfirst}
+\documentclass[english,bachelor,a4paper,twoside,11pt]{ppfcmthesis}
 \usepackage{amsmath}
 \usepackage[utf8]{inputenc}
 \usepackage[a4paper,left=3.5cm,right=2.5cm,top=3cm,bottom=3cm]{geometry}
 \usepackage[T1]{fontenc}
-\usepackage[hidelinks]{hyperref}
 \usepackage{array}
-\usepackage[cache=false]{minted}
 \usepackage{hhline}
 \usepackage{xcolor}
 \usepackage{tcolorbox}
 \usepackage{graphicx}
 \usepackage{subfig}
-%\renewcommand*\familydefault{ppl}
-
-% backgound color for code listings
-\definecolor{bg}{rgb}{0.92,0.92,0.92}
+%\usepackage[hidelinks]{hyperref}
 
 % make references appear in table of contents
 \usepackage{tocbibind}
-
-\setlength\parindent{20pt}
 
 % maths
 \usepackage{bm}
 \usepackage{mathtools}
 \DeclarePairedDelimiter\floor{\lfloor}{\rfloor}
-\DeclareMathOperator*{\argmax}{argmax}
-\DeclareMathOperator*{\argmin}{argmin}
 
 % pseudocode
 \usepackage{algorithm}
 \usepackage{algpseudocode}
 \newcommand{\var}[1]{{\ttfamily#1}}% variable
 
+\authortitle{}
+
+\author{Marcin Elantkowski \album{116353} \and
+Adam Krasuski \album{122479} \and
+Agnieszka Lipska\album{122467} \and
+Franciszek Walkowiak \album{122592}}
+\title{Library for fast classification in learning problems with a large number of labels}
+\ppsupervisor{~dr~inż.~Krzysztof Dembczyński}
+\ppyear{2018}
+
+\newcommand{\remark}[1]{ {\color{red}#1} }
 
 \begin{document}
-\thispagestyle{empty}
-\newgeometry{left=2.5cm, right=2.5cm, top=0.8in, bottom=0.8in}
-\begin{center}
-	\begin{Large}
-	Poznan University of Technology\\
-	Faculty of Computing\\
-	Institute of Computing Science\\
-	\end{Large}
-	\vspace*{\fill}
-		\begin{Large}
-			Engineering Diploma Thesis\\
-			\vspace{2ex}
-			Library for fast classification in learning problems with a large number of labels\\
-			\vspace{2ex}
-		\end{Large}
-		\begin{large}
-			\vspace{2ex}
-			Marcin Elantkowski\\
-			Adam Krasuski\\
-			Agnieszka Lipska\\
-			Franciszek Walkowiak\\
-		\end{large}
-	\vspace*{\fill}
-\end{center}
-\begin{large}
-	\flushright{Thesis supervisor: Ph. D. Krzysztof Dembczyński}\\
-\end{large}
-\begin{center}
-	\vspace{5ex}
-	Poznań, 2018
-\end{center}
-\restoregeometry
-\newpage
-\tableofcontents
-\newpage
-\section{Introduction}
+
+% Front matter starts here
+\frontmatter\pagestyle{empty}%
+\maketitle\cleardoublepage%
+
+% Blank info page for "karta dyplomowa"
+\thispagestyle{empty}\vspace*{\fill}%
+\begin{center}Tutaj przychodzi karta pracy dyplomowej;\\oryginał wstawiamy do wersji dla archiwum PP, w pozostałych kopiach wstawiamy ksero.\end{center}%
+\vfill \cleardoublepage%
+
+\pagestyle{ppfcmthesis}%
+
+%Abstract
+%\addcontentsline{toc}{chapter}{Abstract}
+%\input{abstract.tex}
+
+%Acknowledgements
+%\addcontentsline{toc}{chapter}{Acknowledgements}
+%\input{acknowledgements.tex}
+
+% Table of contents.
+\tableofcontents* \cleardoublepage%
+
+%\cleardoublepage
+%\listoffigures
+
+%\cleardoublepage
+%\listoftables
+
+\mainmatter%
+\chapter{Introduction}
 	\input{tex/introduction.tex}
-\section{Theoretical description of algorithms}
+\chapter{Theoretical description of algorithms}
 	\input{tex/mcss.tex}
-	\subsection{Hierarchical $K$-means}
+	\section{Hierarchical $K$-means}
 	\input{tex/kmeans.tex}
-	\subsection{Quantization-based inner product search}
+	\section{Quantization-based inner product search}
 	\input{tex/quantization.tex}
-	\subsection{Asymmetric locality sensitive hashing}
+	\section{Asymmetric locality sensitive hashing}
 	\input{tex/alsh.tex}
-\section{Implementation}
+\chapter{Implementation}
+	\section{General information}
 	\input{tex/faissAPI.tex}
-	\subsection{Hierarchical $k$-means}
+	\section{Hierarchical $k$-means}
 	\input{tex/kmeans_implementation.tex}
-	\subsection{Quantization-based inner product search}
+	\section{Quantization-based inner product search}
 	\input{tex/quantization_implementation.tex}
-	\subsection{Asymmetric locality sensitive hashing}
+	\section{Asymmetric locality sensitive hashing}
 	\input{tex/alsh_implementation.tex}
-\section{Experiments}
+\chapter{Experiments}
 	\input{tex/analysis.tex}
-\section{Conculsions}
+\chapter{Conculsions}
 	\input{tex/conclusions.tex}
 \bibliographystyle{plain}
 \bibliography{bibliogr}
 \newpage
-\section{Appendices}
-\label{sec:appendices}
-\appendix
+\chapter{Appendix}
 \section{Configuring the environment}
 	\input{tex/configuration.tex}
+
+% Colophon is a place where you should let others know about copyrights etc.
+\ppcolophon
+
 \end{document}
