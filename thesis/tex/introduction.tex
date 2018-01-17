@@ -1,61 +1,14 @@
-The aim of this thesis is to describe a library for fast, approximate \textit{Maximum Inner Product Search} (MIPS),
-which we created as part of our dissertation. 
-
-The goal of this work was to provide a set of tools that would help machine learning developers and practitioners create faster, 
-more scalable machine learning models.
-Problems requiring MIPS naturally arise in many machine learning models, for example in
-classification problems with large output spaces, when a linear models or deep neural networks are used.
-
-In MIPS we are usually given a large set $S$ of vectors (also called a database) and a set of queries
-(which are vectors as well). Single query is denoted by $q$.
-These vectors are often high dimensional --- the number of dimensions can be in range of hundreds or thousands.
-Every vector from database and every query represent an object with a number of features equal to number of dimensions.
-The essence of MIPS is for each query to retrieve a fixed number (denoted by $k$)
-of objects from database that resemble the query most.
-Values of $k$ are typically ranging from $5$ to $100$.
-The retrieval process is also called querying or prediction.
-
-All vectors should be prepared in such a way that the higher inner product between them is, the more similar they are
- --- inner product is the similarity metric here. Having said that, the goal is to find $y$ complying with the condition
-\[ y = \argmax_{x \in S} q^T x \]
-
-Unfortunately, when one has to query against hundreds of thousands of vectors,
-a linear search time can become prohibitively expensive.
-In other words multiplicating query and every database vector may not be feasible in practical applications.
-To counter that, proposals were made in several articles to build an \textit{index} for speeding
-up prediction using a trained index.
-Index is essentially a specific data structure built by preprocessing database vectors (before
-any of the queries are answered --- this is a one-time cost).
-The most important feature of the index is short prediction time, training can last much longer if needed.
-It is not always necessary for the exact result to be returned --- it can often be approximate.
-In this thesis we focus on such algorithms --- they trade some prediction precision for speed.
-
-The library we built aims to deliver indexes, based on algorithms proposed in three articles,
-designed to efficiently retrieve a set of approximate results.
-
-Additionally, we wanted the algorithms to not only offer high performance, but also to be easy-to-use. We therefore
-focused on providing a set of wrappers around a range of machine learning libraries, that allow users to 
-speed up their models without ever touching any of the algorithms indexes rely on. Consequently,
-these wrappers can be used as drop-in replacements for a number of models in Python machine learning ecosystem.
-We show some examples of how this library can be used in practice,
-as well as detailed experiments measuring the speed and accuracy of our algorithms.
-
-The rest of this thesis is structured as follows.
-Second chapter is dedicated to theoretical description of algorithms aiming to solve MIPS.
-Third chapter describes implementation details of written software.
-Fourth chapter presents experimental results.
-Fifth chapter concludes the thesis.
-There is also an appendix at the end describing how to run our library.
-
-Marcin Elantkowski wrote wrappers translating C++ indexes to Python, prepared data using his fork of FastText
-library, adapted the code so it could be used from Pytorch and ran final tests on Amazon Web Services.
-
-Adam Krasuski refactored and optimized core algorithms C++ code, implemented Faiss interface,
-then after final tests, analyzed the benchmarking results.
-
-Agnieszka Lipska implemented first version of quantization algorithm, implemented Faiss interface and
-adapted the code to use it from Scikit-learn.
-
-Franciszek Walkowiak implemented naive versions of ALSH and hierarchical \mbox{k-means} and conducted 
-preliminary tests on a personal computer.
-\newpage
+Today’s world is data-rich. It’s almost impossible to analyze so big chunks of information using traditional data processing software.
+Machine learning comes as solution, giving an alternative to analyzing huge volumes of data. 
+This field of computer science became more and more popular because of large datasets, which are used almost everywhere. 
+Machine learning is a data science technique, which enable computers to learn like humans or animals. It means that machines use algorithms to learn from data how to find a particular information and it isn’t explictly programmed how to do that. 
+That type of algorithms improves when the number of training samples increases. 
+With the rise in big data it is used in such areas: natural language processing, image processing, recommendation systems, computational biology. Machine learning is applied in instances that we use in ordinary life like online reccomandation systems – friends suggestions on Facebook, Netflix movies suggestions based on our earlier choices and also it’s used to document tagging for example on Wikipedia website. 
+It should be consider to use for complex task involving a large amount of data, which don’t have an exact equation. 
+Machine learning uses two popular methods: supervised learning and unsupervised learning. 
+Supervised learning train model using known input and output data so that it can predict outputs for future inputs.
+It use classification and regression methods to develop models. 
+Classification techniques classify input data into categories, it’s used in medical imaging and speech recognition. 
+Regression techniques predicts continuous responses, example usage can be predicting house prices. Unsupervised learning groups and interpret data based only on given input. 
+The most common unsupervised learning technique is clustering. 
+It analyses an input data to find a pattern in it. Typical usage of clustering method are recommendation systems. In our thesis we try to resolve a problem called MIPS using supervised learning classification method. 
