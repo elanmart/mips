@@ -161,5 +161,29 @@ void IndexSubspaceQuantization::search(idx_t n, const float* data, idx_t k,
             // TODO write distances...
         }
     }
+}
 
+void IndexSubspaceQuantization::save(const char* fname) const {
+    FILE* f = fopen(fname, "wb");
+    write_vec(permutation, f);
+    size_t s = kmeans.size();
+    fwrite(&s, sizeof(s), 1, f);
+    for (const auto& i: kmeans) {
+        write_floatmatrix(i.centroids, f);
+        write_vec(i.assignments, f);
+    }
+    fclose(f);
+}
+
+void IndexSubspaceQuantization::load(const char* fname) {
+    FILE* f = fopen(fname, "rb");
+    read_vec(permutation, f);
+    size_t s;
+    fread(&s, sizeof(s), 1, f);
+    kmeans.resize(s);
+    for (auto& i: kmeans) {
+        read_floatmatrix(i.centroids, f);
+        read_vec(i.assignments, f);
+    }
+    fclose(f);
 }
