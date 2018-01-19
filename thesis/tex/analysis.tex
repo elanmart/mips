@@ -53,7 +53,7 @@ since $K$-Means algorithm is generalization of IVF. In almost all places $K$-Mea
 better than IVF --- again, this can be explained by having more parameters to be tested.
 To check whether this is caused by possibly faster implementation or the introduction of
 hierarchy, we split $K$-Means curve into three lines, each corresponding to a single
-number of layers (for example, KMeans-2 has two layers).
+number of layers (for example, KMeans-2 means $K$-Means with two layers).
 
 % TODO jak wyżej - zwiększyć font na wykresach
 \begin{figure}[H]
@@ -100,5 +100,71 @@ complexity of flat $K$-Means (equivalent to IVF) is $O(\sqrt{N})$. Two- or three
 $K$-Means bring this limit down to $O(\sqrt[3]{N})$, or $O(\sqrt[4]{N})$
 respectively\footnote{Admittedly with a small multiplicative slowdown.}.
 
-TODO: table with nondominated parameters, additional analysis
+It is interesting to find out which parameters correspond to particular level
+of precision or speedup. For that, we plotted precision vs. time for different
+values of $n_{train}$ parameter (which determines shape of $K$-Means tree as
+described in chapter 2.1 --- generally, higher values correspond to wider
+trees).
+
+
+\begin{figure}[H]
+	\centering
+	\subfloat{
+		\includegraphics[width=.48\textwidth]{../graphs/kmeans-specific/time-prec-WikiLSHTC-1.eps}
+	}
+	\subfloat{
+		\includegraphics[width=.48\textwidth]{../graphs/kmeans-specific/time-prec-WikiLSHTC-2.eps}
+	}
+	\\
+	\subfloat{
+		\includegraphics[width=.48\textwidth]{../graphs/kmeans-specific/time-prec-WikiLSHTC-3.eps}
+	}
+	\caption{Precision vs. time for various values of $n_{train}$ parameter.}
+\end{figure}
+
+The general trend is that the curves corresponding to lower $n_{train}$ perform
+better than other at high-speed, low-precision parts of the chart. In other
+words, if high precision is needed, high $n_{train}$ is a good choice (and vice
+versa).
+
+This result is consistent with our theoretical caclulations in chapter 2.1, which
+were performed for the case of $n_{train} \approx n_{query}$ (and called simply $n$).
+In that special case, we would expect low $n$ to cause approximation to be very
+quick (as very small number of subtrees are considered), but rough. We can
+check if this assumption holds by graphing $n_{query}$ vs. time and comparing
+it with previous graphs.
+
+\begin{figure}[H]
+	\centering
+	\subfloat{
+		\includegraphics[width=.48\textwidth]{../graphs/kmeans-specific/test-time-WikiLSHTC-1.eps}
+	}
+	\subfloat{
+		\includegraphics[width=.48\textwidth]{../graphs/kmeans-specific/test-time-WikiLSHTC-2.eps}
+	}
+	\\
+	\subfloat{
+		\includegraphics[width=.48\textwidth]{../graphs/kmeans-specific/test-time-WikiLSHTC-3.eps}
+	}
+	\caption{Time vs. $n_{query}$ for various values of $n_{train}$ parameter.}
+\end{figure}
+
+The charts are quite noisy, since there is some random factor involved. Still,
+let us consider two-layer case. On the previous graphs, we could see 
+$n_{train} = 5$ was dominating for times in range approximately 0.02 to 
+0.04 (fraction of full search time). Now, looking at time vs. $n_{query}$ graph,
+we get that range of $n_{query}$ corresponding to that time range is about
+3 to 10. Similarly, for $n_{train} = 30$, time range is about 0.04 to 0.12
+(though the upper limit is hard to tell due to noise), with corresponding
+$n_{query}$ range of about 10 to 60. In both cases, the $n_{query}$ range we
+get is centered near $n_{train}$, meaning that for optimal 
+$(n_{train}, n_{query})$ choices, both parameters are approximately 
+equal\footnote{
+Note that the graphs only show a few chosen values of $n_{train}$. Plotting
+more values would narrow their non-domination range, strengthening the 
+stated assumption. We did not do this due to graph readability issues
+(lines being hard to tell apart).
+}.
+
+
 \newpage

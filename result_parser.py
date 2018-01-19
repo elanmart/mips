@@ -287,7 +287,7 @@ def main():
                 if a[0] > best:
                     best = a[0]
                     arr2.append(a)
-            lines.append(plt.step([x[2] for x in arr2], [x[0] for x in arr2], label = "nprobe = %s" % np)[0])
+            lines.append(plt.step([x[2] for x in arr2], [x[0] for x in arr2], label = "n_train = %s" % np)[0])
         plt.legend(handles = lines)
         plt.ylabel("Precision")
         plt.xlabel("Fraction of brute force time")
@@ -300,15 +300,28 @@ def main():
         plt.clf()
         lines = []
         for arr, np in zip(arrx, nprobes):
-            lines.append(plt.step([x[1] for x in arr], [x[0] for x in arr], label = "nprobe = %s" % np)[0])
+            lines.append(plt.step([x[1] for x in arr], [x[0] for x in arr], label = "n_train = %s" % np)[0])
         plt.legend(handles = lines)
-        plt.xlabel("nprobe_test")
+        plt.xlabel("n_query")
         plt.ylabel("Precision")
         plt.xlim(0, 110)
         plt.ylim(0, maxp * 1.1)
         plt.title("%s-layer K-Means, %s" % (par.layers, ds))
         plt.savefig("graphs/kmeans-specific/test-prec-%s-%s.eps" % (ds, par.layers))
         plt.savefig("graphs/kmeans-specific/test-prec-%s-%s.png" % (ds, par.layers))
+
+        plt.clf()
+        lines = []
+        for arr, np in zip(arrx, nprobes):
+            lines.append(plt.step([x[1] for x in arr], [x[2] for x in arr], label = "n_train = %s" % np)[0])
+        plt.legend(handles = lines)
+        plt.xlabel("n_query")
+        plt.ylabel("Fraction of brute force time")
+        plt.xlim(0, 110)
+        plt.ylim(0, maxt[ds])
+        plt.title("%s-layer K-Means, %s" % (par.layers, ds))
+        plt.savefig("graphs/kmeans-specific/test-time-%s-%s.eps" % (ds, par.layers))
+        plt.savefig("graphs/kmeans-specific/test-time-%s-%s.png" % (ds, par.layers))
 
 if __name__ == "__main__":
     main()
