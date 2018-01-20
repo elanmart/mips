@@ -1,4 +1,4 @@
-\section{\remark{Aim and scope of the thesis}}
+\section{Aim and scope of the thesis}
 
 The aim of this thesis is to describe a library for fast, approximate \textit{maximum inner product search} (MIPS),
 which we created as part of our dissertation.
@@ -8,29 +8,20 @@ more scalable machine learning models.
 Problems requiring MIPS naturally arise in many machine learning models, for example in
 classification problems with large output spaces, when a linear models or deep neural networks are used.
 
-\remark{Poniższe akapity warto przenieść do następnego rozdziału. W ich miejsce dodajcie mniej formalny opis.
+Generally speaking, MIPS is the task involving searching a massive collection of items for
+an item most similar to particular one, called query. The items may have many properties (features)
+according to which items can be more related to each other or differ from each other.
+Every item is mathematically represented by a vector, with all vector's components being item's features.
 
-In MIPS we are usually given a large set $S$ of vectors (also called a database) and a set of queries
-(which are vectors as well). Single query is denoted by $q$.
-These vectors are often high dimensional --- the number of dimensions can be in range of hundreds or thousands.
-Every vector from database and every query represent an object with a number of features equal to number of dimensions.
-The essence of MIPS is for each query to retrieve a fixed number (denoted by $k$)
-of objects from database that resemble the query most.
-Values of $k$ are typically ranging from $5$ to $100$.
-The retrieval process is also called querying or prediction.
-
-All vectors should be prepared in such a way that the higher inner product between them is, the more similar they are
- --- inner product is the similarity metric here. Having said that, the goal is to find $y$ complying with the condition
-\[ y = \argmax_{x \in S} q^T x \]
-}
-Unfortunately, when one has to query against hundreds of thousands of vectors,
+Unfortunately, when one has to compare the query with hundreds of thousands of vectors,
 a linear search time can become prohibitively expensive.
-In other words multiplicating query and every database vector may not be feasible in practical applications.
-To counter that, proposals were made in several articles to build a \remark{kind of an \textit{index} for speeding
-up the prediction time}.
-\remark{This index} is essentially a specific data structure built by preprocessing database vectors (before
+In other words comparing query and every database vector may not be feasible in practical applications.
+To counter that, proposals were made in several articles to build a kind of an \textit{index} for speeding
+up the searching time.
+This index is essentially a specific data structure built by preprocessing database vectors (before
 any of the queries are answered --- this is a one-time cost).
-The most important feature of the index is short prediction time, training can last much longer if needed.
+The most important feature of the index is short prediction (searching) time, training (index preparation)
+can last much longer if needed.
 It is not always necessary for the exact result to be returned --- it can often be approximate.
 In this thesis we focus on such algorithms --- they trade some prediction precision for speed.
 

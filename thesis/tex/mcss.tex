@@ -1,3 +1,16 @@
+In MIPS we are usually given a large set $S$ of vectors (also called a database) and a set of queries
+(which are vectors as well). Single query is denoted by $q$.
+These vectors are often high dimensional --- the number of dimensions can be in range of hundreds or thousands.
+Every vector from database and every query represent an object with a number of features equal to number of dimensions.
+The essence of MIPS is for each query to retrieve a fixed number (denoted by $k$)
+of objects from database that resemble the query most.
+Values of $k$ are typically ranging from $5$ to $100$.
+The retrieval process is also called querying or prediction.
+
+All vectors should be prepared in such a way that the higher inner product between them is, the more similar they are
+ --- inner product is the similarity metric here. Having said that, the goal is to find $y$ complying with the condition
+\[ y = \argmax_{x \in S} q^T x \]
+
 MIPS problem is closely related to MCSS and NNS --- Maximum Cosine
 Similarity Search and Nearest Neighbour Search, respectively.
 MIPS' goal is to find vector maximizing inner product with query,
