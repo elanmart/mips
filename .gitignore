@@ -3,7 +3,6 @@ bin/
 build/
 data/
 aws/
-makefile.inc
 .idea/
 CMakeLists.txt
 python/*.so
