@@ -1,13 +1,13 @@
-#include "../src/common.h"
-#include "../src/quantization.h"
-#include "../src/kmeans.h"
-#include "../src/alsh.h"
-#include "util.wrap.h"
+#include "src/common.h"
+#include "src/quantization.h"
+#include "src/kmeans.h"
+#include "src/alsh.h"
+#include "wrapper_util.h"
 
 namespace py = pybind11;
 
 
-PYBIND11_MODULE(mips, m) {
+PYBIND11_MODULE(_pymips, m) {
     m.doc() = "MIPS library";
 
 

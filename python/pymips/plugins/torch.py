@@ -1,18 +1,11 @@
-import sys
-import os
-
-sys.path.append(os.path.abspath('/home/elan/Mine/ml-mine/code/inzynierka/mips/faiss/'))
-
-import numpy as np
-
-import torch as th
-from torch import nn
-import numpy as np
-from torch.autograd import Variable as V
-
 from collections import namedtuple
 
+import numpy as np
+import torch as th
+from torch import nn
+
 import faiss
+
 
 class ApproximateLinear(nn.Linear):
     return_type = namedtuple('TopK', ['distances', 'indices'])
@@ -82,54 +75,3 @@ class ApproximateLinear(nn.Linear):
             D, I = self.index.search(self._as_np(x), k)
         
         return ApproximateLinear.return_type(D, I)
-    
-    
-def example():
-    d_in  = 1024
-    d_h   = 256
-    d_out = 50_000
-    
-    model = nn.Sequential(
-        nn.Linear(d_in, d_h),
-        nn.Linear(d_h, d_h)
-        nn.ApproxLinear(d_h, d_out)
-    )
-    
-    train(model, data)
-    
-    starndard_predictions = model(test_data)
-    
-    model.eval()
-    top_k_approx_predictions = model(test_data, k=100)
-
-    
-def ok():
-    al = ApproximateLinear(16, 18_162)
-    x = V(th.randn(1024, 16))
-    x = al._as_np(x)
-    D, I = al.index.search(x, 16)
-    
-    return D, I
-
-    
-def segfault():
-    al = ApproximateLinear(16, 18_162)
-
-    x = V(th.randn(1, 16))
-    _ = al(x)
-
-    al = al.cuda()
-
-    xc = V(th.randn(1, 16).cuda())
-    _ = al(xc)
-
-    al = al.cpu()
-
-    x = V(th.randn(1, 16))
-    _ = al(x)
-    
-    x = V(th.randn(1024, 16))
-    x = al._as_np(x)
-    D, I = al.index.search(x, 16)
-    
-    return D, I
