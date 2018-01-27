@@ -2,6 +2,7 @@
 # and https://github.com/facebookresearch/fastText/blob/master/setup.py
 
 import shutil
+import warnings
 
 from setuptools import setup
 
@@ -10,7 +11,10 @@ def _readme():
     with open("README.md") as f:
         return f.read()
 
-shutil.copyfile("bin/_pymips.so", "python/pymips/index/_pymips.so")
+try:
+    shutil.copyfile("bin/_pymips.so", "python/pymips/index/_pymips.so")
+except:
+    warnings.warn('It seems that you did not compile our c++ source. Falling-back to python-only install')
 
 setup(
     name='pymips',

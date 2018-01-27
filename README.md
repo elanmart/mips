@@ -13,67 +13,39 @@ We've implemented three algorithms as described in
 * Quantization based fast inner product search (Guo, Kumar, Choromanski, Simcha)
 * Asymmetric LSH for sublinear maximum inner product search (Shrivastava, Li)
 
-# Compile py src vs compile cpp src
+The `hierarchical k-means` implementation of Auvolat et. al is quite fast (faster than `FAISS`), 
+the other two not so much.
 
-# Installation (python package)
+This repository also provides some examples of how you can incorporate an index in your `MIPS`-bounded code. 
 
-First, install some dependencies
-`conda install -c conda-forge -c pytorch numpy mkl cmake pybind11 faiss-cpu`
+# Compilation
 
-Then simply run 
-`python setup.py install`
-
-# Installation
-`TODO:` Note that this is only for `Ubuntu-16.04`
-
-Clone the repo including submodules
+## python-only
+To use only the python utils, 
+you can just run 
 
 ```bash
-git clone --recursive https://github.com/walkowiak/mips
+conda install -c pytorch faiss-cpu
+python setup.py install
 ```
 
-To compile the `C++` sources, you'll need a `BLAS` implementation and a compiler supproting `c++ 11` standard. 
-For `BLAS` the easiest way to go is with `OpenBLAS`. You can also use `MKL` installed via `conda`, but setting the
-correct linking flags can be a real pain.
-
-To install `OpenBLAS`, run:
+## python + our c++ indexes
+To build the `C++` code in this repo, you'll also need to build `FAISS`. 
+To build on `Ubuntu-16.04` with `openblas` isntalled (`sudo apt install libopenblas-dev`)
+all you have to do is 
 
 ```bash
-sudo apt install libopenblas-dev
+conda install -c conda-forge pybind11
+git clone --recursive https://github.com/elanmart/mips
+make
+python setup.py install
 ```
 
-You'll also need to *copy* and *modify* a `makefile.inc` from `faiss/example_makefiles` to the repo root directory.
-Please refer to `faiss/INSTALL.md` for details regarding the process.
+If you're on a different platform, you'll need to adjust `makefile.inc` according to instructions 
+in `faiss/INSTALLATION`
 
-For `Ubuntu-16.04` and `OpenBLAS` you can follow these steps:
+You can also use a different `BLAS` implementation, but for `mkl` the compilation is a real pain. 
 
-```bash
-cp  faiss/example_makefiles/makefile.inc.Linux makefile.inc
-vim makefile.inc
-```
-Uncomment `BLASLDFLAGS` for `Ubuntu 16.04` or find appropriate location for your distro.
+# Examples
 
-Comment other irrelevant `BLASLDFLAGS` e.g. for `CentOS`.
-
-If you want to use `Python` wrappers, you'll need to set python include paths (`PYTHONCFLAGS`), for example:
-
-You cant find the correct flags with the command below:
-```bash
-python -c "import numpy as np ; \
-           inc_py= ; \
-           inc_np= ; \
-           print('PYTHONCFLAGS=-I{} -I{}'.format(inc_py, inc_np)"
-```
-
-To use python bindings you'll need `python 3.6+` and 
-several packages. We recommend installing them via `conda`:
-
-```bash
-conda install
-```
-
-To compile simply run:
-`make`
-
-To compile python bindings, run:
-`make py`
+See `python/examples` for some examples.
