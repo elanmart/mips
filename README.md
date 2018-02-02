@@ -49,3 +49,7 @@ You can also use a different `BLAS` implementation, but for `mkl` the compilatio
 # Examples
 
 See `python/examples` for some examples.
+
+# Misc
+
+The `FastText` fork used in our expriments can be found at https://github.com/elanmart/fastText 
